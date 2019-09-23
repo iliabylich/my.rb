@@ -1,12 +1,4 @@
-ClassFrame = Struct.new(
-  :_self,
-  :nesting,
-  :locals,
-  :file,
-  :line,
-  :name,
-  keyword_init: true
-) do
+ClassFrame = FrameClass.new do
   def initialize(iseq:, parent_frame:, name:, superclass:)
     self.file, self.line, self.name = BasicFrameInfo.new(iseq)
 

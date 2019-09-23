@@ -1,14 +1,7 @@
-MethodFrame = Struct.new(
-  :_self,
-  :nesting,
-  :locals,
-  :file,
-  :line,
-  :name,
+MethodFrame = FrameClass.new(
   :args_offset,
   :arg_names,
   :arg_values,
-  keyword_init: true
 ) do
   attr_reader :kwoptarg_ids
 

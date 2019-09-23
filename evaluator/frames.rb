@@ -4,6 +4,26 @@ require_relative './frames/definition_scope'
 require_relative './frames/backtrace_entry'
 require_relative './frames/basic_frame_info'
 
+class FrameClass
+  COMMON_FRAME_ATTRIBUTES = %i[
+    _self
+    nesting
+    locals
+    file
+    line
+    name
+  ].freeze
+
+  def self.new(*arguments, &block)
+    Struct.new(
+      *COMMON_FRAME_ATTRIBUTES,
+      *arguments,
+      keyword_init: true,
+      &block
+    )
+  end
+end
+
 require_relative './frames/top_frame'
 require_relative './frames/class_frame'
 require_relative './frames/method_frame'

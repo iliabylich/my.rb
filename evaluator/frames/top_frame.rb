@@ -1,14 +1,6 @@
 $main = TOPLEVEL_BINDING.eval('self')
 
-TopFrame = Struct.new(
-  :_self,
-  :nesting,
-  :locals,
-  :file,
-  :line,
-  :name,
-  keyword_init: true
-) do
+TopFrame = FrameClass.new do
   def initialize(iseq:)
     self.file, self.line, self.name = BasicFrameInfo.new(iseq)
 
