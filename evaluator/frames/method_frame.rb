@@ -1,29 +1,21 @@
-MethodFrame = FrameClass.new(
-  :args_offset,
-  :arg_names,
-  :arg_values,
-) do
+MethodFrame = FrameClass.new do
   attr_reader :kwoptarg_ids
 
-  def initialize(iseq:, parent_frame:, _self:, arg_values:)
-    self.file, self.line, self.name = BasicFrameInfo.new(iseq)
-
-    self.args_offset = iseq[4][:local_size]
-    self.arg_names = iseq[10].dup
-    self.arg_values = arg_values
-
+  def initialize(parent_frame:, _self:, arg_values:)
     self._self = _self
     self.nesting = parent_frame.nesting
     self.locals = Locals.new
 
+    arg_names = _iseq[10].dup
+
     # init arguments (without optargs and restarg)
 
-    args_info = iseq[11].dup
+    args_info = _iseq[11].dup
 
     id = 3
 
     # this array contains all arguments mixed with utility vars to extract kwargs/mlhs
-    iseq[10].reverse_each do |arg_name|
+    _iseq[10].reverse_each do |arg_name|
       arg_name += 1 if arg_name.is_a?(Integer)
       locals.declare(name: arg_name, id: id)
       id += 1
@@ -86,7 +78,5 @@ MethodFrame = FrameClass.new(
     @kwoptarg_ids = args_info[:keyword].map { |name,| locals.find(name: name).id }
 
     # TODO: extract kwwrest
-
-    # binding.irb
   end
 end

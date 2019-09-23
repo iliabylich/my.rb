@@ -2,7 +2,6 @@ require_relative './locals'
 
 require_relative './frames/definition_scope'
 require_relative './frames/backtrace_entry'
-require_relative './frames/basic_frame_info'
 
 class FrameClass
   COMMON_FRAME_ATTRIBUTES = %i[
@@ -18,9 +17,26 @@ class FrameClass
     Struct.new(
       *COMMON_FRAME_ATTRIBUTES,
       *arguments,
-      keyword_init: true,
-      &block
-    )
+      keyword_init: true
+    ) do
+      attr_reader :_iseq
+      private :_iseq
+
+      class_eval(&block)
+
+      def self.new(iseq:, **attributes)
+        instance = allocate
+        instance.instance_variable_set(:@_iseq, iseq)
+
+        instance.file = iseq[6]
+        instance.line = nil
+        instance.name = iseq[5]
+
+        instance.send(:initialize, **attributes)
+
+        instance
+      end
+    end
   end
 end
 
