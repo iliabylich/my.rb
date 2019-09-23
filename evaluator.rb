@@ -12,13 +12,24 @@ class Evaluator
     execute_iseq(iseq)
   end
 
+  def __log(string)
+    print "-->" * @frame_stack.size
+    print " "
+    puts string
+  end
+
   def execute_iseq(iseq, **payload)
     kind = iseq[9]
 
     go_inside = -> {
       insns = iseq[13]
 
+      puts "\n\n"
+      __log "--------- BEGIN #{current_frame.class} frame (#{current_frame.name}) ---------"
+
       execute_insns(insns, kind)
+      __log "--------- END   #{current_frame.class} frame (#{current_frame.name}) ---------"
+      puts "\n\n"
     }
 
     case kind
@@ -49,13 +60,13 @@ class Evaluator
   end
 
   def execute_insns(insns, kind)
-    @_insns = insns.dup
+    insns = insns.dup
 
     loop do
       break if insns.empty?
 
       if @jump
-        insns.shift until insns[0] == @jump
+        __log "... #{insns.shift.inspect}" until insns[0] == @jump
         @jump = nil
       end
 
@@ -77,6 +88,27 @@ class Evaluator
         end
       when Array
         execute_insn(insn)
+      when :RUBY_EVENT_END, :RUBY_EVENT_CLASS, :RUBY_EVENT_RETURN
+        # skip
+      when /\Alabel_/
+        label = insn
+        if current_frame.labels_to_skip.include?(label)
+          __log "... #{label.inspect}"
+          loop do
+            break if insns.empty?
+            next_insn = insns[0]
+
+            if next_insn.is_a?(Symbol) && next_insn.to_s =~ /\Alabel_/
+              break
+            else
+              __log "... #{insns.shift.inspect}"
+            end
+          end
+        else
+          @running = label
+          __log label.inspect
+          # just run it
+        end
       end
     end
   rescue
@@ -86,9 +118,17 @@ class Evaluator
   end
 
   def execute_insn(insn)
-    p insn
-
     name, *payload = insn
+
+    case name
+    when :defineclass
+      __log [name, payload[0], '...omitted'].inspect
+    when :putiseq
+      __log [name, payload[0][5], '...omitted'].inspect
+    else
+      __log insn.inspect
+    end
+
     send(:"execute_#{name}", payload)
   end
 
@@ -217,19 +257,13 @@ class Evaluator
   def execute_setlocal_WC_0((local_var_id))
     value = pop
     local = current_frame.locals.find(id: local_var_id)
-
-    if local.optarg && local.initialized
-      # Already initialized optarg based on given arglist
-      return
-    end
-
     local.set(value)
   end
 
   def execute_checkkeyword((_unknown, kwoptarg_offset))
     kwoptarg_id = current_frame.kwoptarg_ids[kwoptarg_offset]
     value = current_frame.locals.find(id: kwoptarg_id).value
-    push(!!value)
+    push(value != Locals::UNDEFINED)
   end
 
   def execute_branchif((label))
@@ -311,5 +345,9 @@ class Evaluator
   def execute_newarray((size))
     array = size.times.map { pop }.reverse
     push(array)
+  end
+
+  def execute_putstring((string))
+    push(string)
   end
 end

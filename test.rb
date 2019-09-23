@@ -13,7 +13,7 @@ class B < A
   # tail: <-
   # - skip
   # req: <- (skip mlhs)
-  def m(a, a2, (b, b2, c, c2, d, d2), e, e2, (mlhs), opt1 = 170, opt2 = (2+3), *f, g:, g2:, h: 1002, h2: ('d' + 'efault'), **i)
+  def m(a, a2, (b, b2, c, c2, d, d2), e, e2, (mlhs), opt1 = 170, opt2 = (2+3), *f, g:, g2:, h: 1002, h2: ('d' + 'efault'), h3: ('a' + 'b'), **i)
     puts [
       "a = #{a.inspect}",
       "a2 = #{a2.inspect}",
@@ -33,6 +33,7 @@ class B < A
       "g2 = #{g2.inspect}",
       "h = #{h.inspect}",
       "h2 = #{h2.inspect}",
+      "h3 = #{h3.inspect}",
       "i = #{i.inspect}",
     ]
     # super(4) * a * b * c
@@ -40,7 +41,7 @@ class B < A
   end
 end
 
-B.new.m(1, 2, [3, 4, 5, 6, 7, 8], 9, 10, [11], 12, 13, 13, g: 14, g2: 15, h: 16, i: 17, j: 18)
+B.new.m(1, 2, [3, 4, 5, 6, 7, 8], 9, 10, [11], 12, 13, 13, g: 14, g2: 15, h: 16, i: 17, h3: 'hh3', j: 18)
 # p A.ancestors
 # p B.ancestors
 # p 4200

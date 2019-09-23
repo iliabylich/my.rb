@@ -22,7 +22,7 @@ class FrameClass
       attr_reader :_iseq
       private :_iseq
 
-      attr_reader :prerun_labels
+      attr_reader :labels_to_skip
 
       class_eval(&block)
 
@@ -31,7 +31,7 @@ class FrameClass
 
         instance.instance_eval {
           @_iseq = iseq
-          @prerun_labels = []
+          @labels_to_skip = []
         }
 
         instance.file = iseq[6]
@@ -86,6 +86,10 @@ class FrameStack
 
   def top
     @stack.last
+  end
+
+  def size
+    @stack.size
   end
 
   def to_backtrace

@@ -1,25 +1,26 @@
 require 'set'
 
-Local = Struct.new(:name, :id, :value, :initialized, :optarg, keyword_init: true) do
+Local = Struct.new(:name, :id, :value, keyword_init: true) do
   def get
     value
   end
 
-  def set(value, optarg: nil)
+  def set(value)
     self.value = value
-    self.initialized = true
-    self.optarg = true if optarg
     value
   end
 end
 
 class Locals
+  UNDEFINED = Object.new
+  def UNDEFINED.inspect; 'UNDEFINED'; end
+
   def initialize
     @set = Set.new
   end
 
   def declare(name: nil, id: nil)
-    @set << Local.new(name: name, id: id, value: nil, initialized: false)
+    @set << Local.new(name: name, id: id, value: UNDEFINED)
   end
 
   def find(name: nil, id: nil)
@@ -39,7 +40,7 @@ class Locals
 
   def pretty
     @set
-      .map { |local| ["#{local.name}(#{local.id})", local.initialized ? local.value : "unitialized"] }
+      .map { |local| ["#{local.name}(#{local.id})", local.value] }
       .to_h
   end
 end
