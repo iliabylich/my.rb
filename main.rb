@@ -16,7 +16,7 @@ class RubyRb
   end
 
   def self.run_instruction(iseq)
-    Evaluator.new(iseq.to_a).execute
+    Evaluator.new.execute(iseq.to_a)
   end
 end
 

@@ -22,11 +22,17 @@ class FrameClass
       attr_reader :_iseq
       private :_iseq
 
+      attr_reader :prerun_labels
+
       class_eval(&block)
 
       def self.new(iseq:, **attributes)
         instance = allocate
-        instance.instance_variable_set(:@_iseq, iseq)
+
+        instance.instance_eval {
+          @_iseq = iseq
+          @prerun_labels = []
+        }
 
         instance.file = iseq[6]
         instance.line = nil

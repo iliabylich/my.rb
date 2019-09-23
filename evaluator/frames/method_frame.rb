@@ -78,5 +78,7 @@ MethodFrame = FrameClass.new do
     @kwoptarg_ids = args_info[:keyword].map { |name,| locals.find(name: name).id }
 
     # TODO: extract kwwrest
+
+    binding.irb
   end
 end

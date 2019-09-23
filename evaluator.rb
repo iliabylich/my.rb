@@ -1,16 +1,15 @@
 require_relative './evaluator/frames'
 
 class Evaluator
-  def initialize(iseq)
-    @iseq = iseq
+  def initialize
     @stack = []
     @frame_stack = FrameStack.new
 
     @jump = nil
   end
 
-  def execute
-    execute_iseq(@iseq)
+  def execute(iseq)
+    execute_iseq(iseq)
   end
 
   def execute_iseq(iseq, **payload)
