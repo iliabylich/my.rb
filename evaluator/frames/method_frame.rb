@@ -104,6 +104,6 @@ MethodFrame = FrameClass.new do
       end
     end
 
-    @kwoptarg_ids = args_info[:keyword].grep(Array).map { |name,| locals.find(name: name).id }
+    @kwoptarg_ids = (args_info[:keyword] || []).grep(Array).map { |name,| locals.find(name: name).id }
   end
 end

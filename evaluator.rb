@@ -105,7 +105,6 @@ class Evaluator
             end
           end
         else
-          @running = label
           __log label.inspect
           # just run it
         end
