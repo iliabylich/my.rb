@@ -19,6 +19,10 @@ class Locals
     @set = Set.new
   end
 
+  def declared?(name: nil, id: nil)
+    @set.any? { |local| local.name == name || local.id == id }
+  end
+
   def declare(name: nil, id: nil)
     @set << Local.new(name: name, id: id, value: UNDEFINED)
   end

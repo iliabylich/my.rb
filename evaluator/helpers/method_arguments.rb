@@ -20,7 +20,7 @@ class MethodArguments
 
     req_args_count = args_info[:lead_num] || 0
 
-    opt_info = args_info[:opt].dup
+    opt_info = (args_info[:opt] || []).dup
 
     rest_start = args_info[:rest_start]
     needs_rest = !rest_start.nil?
@@ -96,7 +96,8 @@ class MethodArguments
         opt_info.shift
       elsif kwdata
         # kwrestarg
-        locals.find(id: arg_name).set(kwvalues)
+        kwrest = kwvalues.reverse_each.to_a.to_h
+        locals.find(id: arg_name).set(kwrest)
         kwdata = nil
       else
 

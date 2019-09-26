@@ -25,11 +25,13 @@ class Evaluator
       insns = iseq[13]
 
       puts "\n\n"
-      __log "--------- BEGIN #{current_frame.class} frame (#{current_frame.name}) ---------"
+      __log "--------- BEGIN #{current_frame.class} frame (#{current_frame.pretty_name}) ---------"
 
-      execute_insns(insns, kind)
-      __log "--------- END   #{current_frame.class} frame (#{current_frame.name}) ---------"
+      result = execute_insns(insns, kind)
+      __log "--------- END   #{current_frame.class} frame (#{current_frame.pretty_name}) ---------"
       puts "\n\n"
+
+      result
     }
 
     case kind
@@ -86,6 +88,10 @@ class Evaluator
         else
           binding.irb
         end
+      when [:leave]
+        returning = pop
+        __log "#{insn.inspect} (returning #{returning})"
+        return returning
       when Array
         execute_insn(insn)
       when :RUBY_EVENT_END, :RUBY_EVENT_CLASS, :RUBY_EVENT_RETURN
@@ -150,6 +156,10 @@ class Evaluator
     push(current_self)
   end
 
+  def execute_putobject_INT2FIX_0_(_)
+    push(0)
+  end
+
   def execute_putobject_INT2FIX_1_(_)
     push(1)
   end
@@ -163,6 +173,31 @@ class Evaluator
     recv = pop
     push(recv + arg)
   end
+
+  #define VM_CALL_ARGS_SPLAT      (0x01 << VM_CALL_ARGS_SPLAT_bit)
+  #define VM_CALL_ARGS_BLOCKARG   (0x01 << VM_CALL_ARGS_BLOCKARG_bit)
+  #define VM_CALL_FCALL           (0x01 << VM_CALL_FCALL_bit)
+  #define VM_CALL_VCALL           (0x01 << VM_CALL_VCALL_bit)
+  #define VM_CALL_ARGS_SIMPLE     (0x01 << VM_CALL_ARGS_SIMPLE_bit)
+  #define VM_CALL_BLOCKISEQ       (0x01 << VM_CALL_BLOCKISEQ_bit)
+  #define VM_CALL_KWARG           (0x01 << VM_CALL_KWARG_bit)
+  #define VM_CALL_KW_SPLAT        (0x01 << VM_CALL_KW_SPLAT_bit)
+  #define VM_CALL_TAILCALL        (0x01 << VM_CALL_TAILCALL_bit)
+  #define VM_CALL_SUPER           (0x01 << VM_CALL_SUPER_bit)
+  #define VM_CALL_ZSUPER          (0x01 << VM_CALL_ZSUPER_bit)
+  #define VM_CALL_OPT_SEND        (0x01 << VM_CALL_OPT_SEND_bit)
+  VM_CALL_ARGS_SPLAT      = (0x01 << 0)
+  VM_CALL_ARGS_BLOCKARG   = (0x01 << 1)
+  VM_CALL_FCALL           = (0x01 << 2)
+  VM_CALL_VCALL           = (0x01 << 3)
+  VM_CALL_ARGS_SIMPLE     = (0x01 << 4)
+  VM_CALL_BLOCKISEQ       = (0x01 << 5)
+  VM_CALL_KWARG           = (0x01 << 6)
+  VM_CALL_KW_SPLAT        = (0x01 << 7)
+  VM_CALL_TAILCALL        = (0x01 << 8)
+  VM_CALL_SUPER           = (0x01 << 9)
+  VM_CALL_ZSUPER          = (0x01 << 10)
+  VM_CALL_OPT_SEND        = (0x01 << 11)
 
   def execute_opt_send_without_block((options, _flag))
     args = []
@@ -185,11 +220,27 @@ class Evaluator
       when :'core#define_method'
         method_name, body_iseq = *args
         __define_method(method_name: method_name, body_iseq: body_iseq)
+      when :'core#hash_merge_ptr'
+        base = args.shift
+        pairs = args.each_slice(2).to_a.to_h
+        base.merge(pairs)
+      when :'core#hash_merge_kwd'
+        args.reduce(&:merge)
       else
+
+        if (options[:flag] & VM_CALL_ARGS_SPLAT).nonzero? && kwarg_names.nil?
+          *head, tail = args
+          args = [*head, *tail]
+        end
+
         recv.send(mid, *args)
       end
 
     push(result)
+  end
+
+  def execute_send((options, _flag1, _flag2))
+    binding.irb
   end
 
   def __define_method(method_name:, body_iseq:)
@@ -198,14 +249,15 @@ class Evaluator
     define_on.define_method(method_name) do |*method_args|
       _self.execute_iseq(body_iseq, _self: self, method_args: method_args)
     end
+    method_name
   end
 
   def execute_leave(args)
-    # noop
+    @return = pop
   end
 
   def execute_putspecialobject(args)
-    # noop (FrozenCore)
+    push(:FrozenCore)
   end
 
   def execute_putnil(_)
@@ -241,7 +293,7 @@ class Evaluator
   end
 
   def execute_putiseq((iseq))
-    push(iseq)
+    push(iseq.freeze)
   end
 
   def execute_duparray((array))
@@ -255,6 +307,11 @@ class Evaluator
 
   def execute_setlocal_WC_0((local_var_id))
     value = pop
+
+    unless current_frame.locals.declared?(id: local_var_id)
+      current_frame.locals.declare(id: local_var_id)
+    end
+
     local = current_frame.locals.find(id: local_var_id)
     local.set(value)
   end
@@ -278,7 +335,8 @@ class Evaluator
 
       case array
       when Array
-        size.times { push(array.pop) }
+        copy = array.dup
+        size.times { push(copy.pop) }
       else
         binding.irb
       end
@@ -348,5 +406,54 @@ class Evaluator
 
   def execute_putstring((string))
     push(string)
+  end
+
+  def execute_splatarray((_flag))
+    push(pop.to_a)
+  end
+
+  def execute_concatarray(_)
+    last = pop
+    first = pop
+    push([*first, *last])
+  end
+
+  def execute_invokesuper((options, _flag1, _flag2))
+    recv = current_frame._self
+    mid = current_frame.name
+    method = recv.method(mid).super_method
+    args = options[:orig_argc].times.map { pop }.reverse
+
+    if options[:flag] & VM_CALL_ARGS_SPLAT
+      *head, tail = args
+      args = [*head, *tail]
+    end
+
+    result = method.call(*args)
+    push(result)
+  end
+
+  def execute_newhash((size))
+    hash = size.times.map { pop }.reverse.each_slice(2).to_h
+    push(hash)
+  end
+
+  def execute_swap(args)
+    first = pop
+    last = pop
+    push(first)
+    push(last)
+  end
+
+  def execute_opt_aref((options, _flag))
+    args = options[:orig_argc].times.map { pop }.reverse
+    recv = pop
+    push(recv.send(:[], *args))
+  end
+
+  def execute_opt_mult((options, _flag))
+    args = options[:orig_argc].times.map { pop }.reverse
+    recv = pop
+    push(recv.send(:*, *args))
   end
 end

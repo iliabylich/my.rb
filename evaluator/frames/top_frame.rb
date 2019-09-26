@@ -6,4 +6,8 @@ TopFrame = FrameClass.new do
     self.nesting = [Object]
     self.locals = Locals.new
   end
+
+  def pretty_name
+    'TOP'
+  end
 end

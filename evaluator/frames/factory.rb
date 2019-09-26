@@ -19,6 +19,10 @@ class FrameClass
 
       attr_reader :labels_to_skip
 
+      def pretty_name
+        raise NotImplementedError, "#{self.class}#pretty_name is missing"
+      end
+
       class_eval(&block)
 
       def self.new(iseq:, **attributes)

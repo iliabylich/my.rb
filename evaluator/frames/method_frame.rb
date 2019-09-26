@@ -22,4 +22,8 @@ MethodFrame = FrameClass.new do
 
     args = nil
   end
+
+  def pretty_name
+    "#{_self.class}##{name}"
+  end
 end

@@ -8,4 +8,8 @@ ClassFrame = FrameClass.new do
     self.nesting = [*parent_frame.nesting, klass]
     self.locals = Locals.new
   end
+
+  def pretty_name
+    name
+  end
 end
