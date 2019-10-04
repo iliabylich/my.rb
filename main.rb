@@ -19,31 +19,41 @@ class RubyRb
     Evaluator.new.execute(iseq.to_a)
   end
 end
+require 'irb'
+require 'irb/completion'
+require 'readline'
 
-# patch `require`, it's not a "kernel patch"
-module KernelPatch
+module Kernel
+  alias original_require require
+
   def require(filepath)
-    filepath_with_ext = filepath.end_with?('.rb') ? filepath : filepath + '.rb'
-    candidates = $LOAD_PATH.map { |dir| File.join(dir, filepath_with_ext) }
-    resolved = candidates.detect { |f| File.exist?(f) }
+    ['.rb', '.bundle'].each do |ext|
+      filepath_with_ext = filepath.end_with?(ext) ? filepath : filepath + ext
+      candidates = ['/', *$LOAD_PATH].map { |dir| File.join(dir, filepath_with_ext) }
+      resolved = candidates.detect { |f| File.exist?(f) }
 
-    if resolved
-      if $LOADED_FEATURES.include?(resolved)
-        false # emulate original `require`
-      else
-        RubyRb.require(resolved)
+      if resolved
+        if $LOADED_FEATURES.include?(resolved)
+          puts "skipping #{resolved}"
+          return false # emulate original `require`
+        elsif File.extname(resolved) == '.rb'
+          puts "EVALING #{resolved}"
+          RubyRb.require(resolved)
+          return true
+        else
+          # .bundle or .so, we have to load it via ruby
+        end
       end
-    else
-      puts "Unable to do `require '#{filepath}'"
-      before = $LOADED_FEATURES.dup
-      result = super
-      diff = $LOADED_FEATURES - before
-      puts "Success, diff is #{diff.inspect}"
-      result
     end
+
+    puts "Unable to do `require '#{filepath}'"
+    before = $LOADED_FEATURES.dup
+    result = original_require(filepath)
+    diff = $LOADED_FEATURES - before
+    puts "Success, diff is #{diff.inspect}"
+    result
   end
 end
-Kernel.prepend(KernelPatch)
 
 runner = Runner.new
 runner.run(
