@@ -491,4 +491,15 @@ class Evaluator
     recv = pop
     push(recv.send(:*, *args))
   end
+
+  def execute_opt_ltlt((options, _flag))
+    item = pop
+    list = pop
+    push(list << item)
+  end
+
+  def execute_getglobal((name))
+    # unfortunately there's no introspection API atm
+    push eval(name.to_s)
+  end
 end
