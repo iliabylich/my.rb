@@ -25,6 +25,20 @@ class FrameStack
     @stack.pop
   end
 
+  def enter_module(**args)
+    @stack << ModuleFrame.new(**args)
+    yield
+  ensure
+    @stack.pop
+  end
+
+  def enter_sclass(**args)
+    @stack << SClassFrame.new(**args)
+    yield
+  ensure
+    @stack.pop
+  end
+
   def enter_method(**args)
     @stack << MethodFrame.new(**args)
     yield

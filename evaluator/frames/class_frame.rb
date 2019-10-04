@@ -1,8 +1,16 @@
 ClassFrame = FrameClass.new do
   def initialize(parent_frame:, name:, superclass:)
-    klass = Class.new(superclass || Object)
     define_on = DefinitionScope.new(parent_frame)
-    define_on.const_set(name, klass)
+
+    klass =
+      if define_on.const_defined?(name)
+        define_on.const_get(name)
+      else
+        define_on.const_set(
+          name,
+          Class.new(superclass || Object)
+        )
+      end
 
     self._self = klass
     self.nesting = [*parent_frame.nesting, klass]

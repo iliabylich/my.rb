@@ -41,13 +41,36 @@ class Evaluator
         &go_inside
       )
     when :class
-      @frame_stack.enter_class(
-        iseq: iseq,
-        parent_frame: current_frame,
-        name: payload[:name],
-        superclass: pop,
-        &go_inside
-      )
+      frame_name = iseq[5]
+      superclass = pop
+
+      case
+      when frame_name.start_with?('<module')
+        @frame_stack.enter_module(
+          iseq: iseq,
+          parent_frame: current_frame,
+          name: payload[:name],
+          &go_inside
+        )
+      when frame_name.start_with?('<class')
+        @frame_stack.enter_class(
+          iseq: iseq,
+          parent_frame: current_frame,
+          name: payload[:name],
+          superclass: superclass,
+          &go_inside
+        )
+      when frame_name == 'singleton class'
+        @frame_stack.enter_sclass(
+          iseq: iseq,
+          parent_frame: current_frame,
+          of: pop,
+          &go_inside
+        )
+      else
+        binding.irb
+      end
+
     when :method
       @frame_stack.enter_method(
         iseq: iseq,
@@ -90,7 +113,7 @@ class Evaluator
         end
       when [:leave]
         returning = pop
-        __log "#{insn.inspect} (returning #{returning})"
+        __log "#{insn.inspect} (returning #{returning.inspect})"
         return returning
       when Array
         execute_insn(insn)
@@ -220,6 +243,9 @@ class Evaluator
       when :'core#define_method'
         method_name, body_iseq = *args
         __define_method(method_name: method_name, body_iseq: body_iseq)
+      when :'core#define_singleton_method'
+        recv, method_name, body_iseq = *args
+        __define_singleton_method(recv: recv, method_name: method_name, body_iseq: body_iseq)
       when :'core#hash_merge_ptr'
         base = args.shift
         pairs = args.each_slice(2).to_a.to_h
@@ -252,6 +278,14 @@ class Evaluator
     method_name
   end
 
+  def __define_singleton_method(recv:, method_name:, body_iseq:)
+    _self = self
+    recv.define_singleton_method(method_name) do |*method_args|
+      _self.execute_iseq(body_iseq, _self: self, method_args: method_args)
+    end
+    method_name
+  end
+
   def execute_leave(args)
     @return = pop
   end
@@ -264,6 +298,7 @@ class Evaluator
     push(nil)
   end
 
+  # Handles class/module/sclass. Have no idea why
   def execute_defineclass((name, iseq))
     execute_iseq(iseq, name: name)
   end
