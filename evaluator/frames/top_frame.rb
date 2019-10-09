@@ -8,6 +8,6 @@ TopFrame = FrameClass.new do
   end
 
   def pretty_name
-    'TOP'
+    "TOP #{file}"
   end
 end

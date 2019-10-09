@@ -8,6 +8,10 @@ class Evaluator
     @jump = nil
   end
 
+  def self.instance
+    @_instance ||= new
+  end
+
   def execute(iseq)
     execute_iseq(iseq)
   end
@@ -79,6 +83,13 @@ class Evaluator
         _self: payload[:_self],
         &go_inside
       )
+    when :block
+      @frame_stack.enter_block(
+        iseq: iseq,
+        parent_frame: payload[:parent_frame],
+        block_args: payload[:block_args],
+        &go_inside
+      )
     else
       binding.irb
     end
@@ -104,7 +115,7 @@ class Evaluator
         when :RUBY_EVENT_LINE
           current_frame.line = next_insn
           insns.shift
-        when :RUBY_EVENT_END, :RUBY_EVENT_CLASS, :RUBY_EVENT_RETURN
+        when :RUBY_EVENT_END, :RUBY_EVENT_CLASS, :RUBY_EVENT_RETURN, :RUBY_EVENT_B_CALL
           # noop
         when Array
           # ignore
@@ -252,6 +263,19 @@ class Evaluator
         base.merge(pairs)
       when :'core#hash_merge_kwd'
         args.reduce(&:merge)
+      when :'core#set_method_alias'
+        recv, new_method_name, existing_method_name = *args
+
+        case recv
+        when :VM_SPECIAL_OBJECT_CBASE
+          recv = current_frame._self
+        else
+          raise 'unsupported'
+        end
+
+        recv.alias_method(new_method_name, existing_method_name)
+
+        nil
       else
 
         if (options[:flag] & VM_CALL_ARGS_SPLAT).nonzero? && kwarg_names.nil?
@@ -265,8 +289,46 @@ class Evaluator
     push(result)
   end
 
-  def execute_send((options, _flag1, _flag2))
-    binding.irb
+  BlockProxy = Struct.new(:iseq, :parent_frame) do
+    def call(*args)
+      binding.irb
+    end
+  end
+
+  def execute_send((options, _flag, block_iseq))
+    mid = options[:mid]
+
+    args = []
+    kwargs = {}
+
+    if (kwarg_names = options[:kw_arg])
+      kwarg_names.reverse_each do |kwarg_name|
+        kwargs[kwarg_name] = pop
+      end
+    end
+
+    args = options[:orig_argc].times.map { pop }.reverse
+    if kwarg_names
+      args << kwargs
+    end
+
+    recv = pop
+
+    if (options[:flag] & VM_CALL_ARGS_SPLAT).nonzero? && kwarg_names.nil?
+      *head, tail = args
+      args = [*head, *tail]
+    end
+
+    original_block_frame = self.current_frame
+
+    if mid == :each_pair
+      binding.irb
+    end
+
+    _self = self
+    result = recv.send(mid, *args, proc { |*args| _self.execute_iseq(block_iseq, block_args: args, parent_frame: original_block_frame) })
+
+    push(result)
   end
 
   def __define_method(method_name:, body_iseq:)
@@ -290,8 +352,17 @@ class Evaluator
     @return = pop
   end
 
-  def execute_putspecialobject(args)
-    push(:FrozenCore)
+  def execute_putspecialobject((type))
+    case type
+    when 1
+      push(:FrozenCore)
+    when 2
+      push(:VM_SPECIAL_OBJECT_CBASE)
+    when 3
+      push(:VM_SPECIAL_OBJECT_CONST_BASE)
+    else
+      raise 'dead'
+    end
   end
 
   def execute_putnil(_)
@@ -340,6 +411,11 @@ class Evaluator
     push(local.get)
   end
 
+  def execute_getlocal_WC_1((local_var_id))
+    local = current_frame.parent_frame.locals.find(id: local_var_id)
+    push(local.get)
+  end
+
   def execute_setlocal_WC_0((local_var_id))
     value = pop
 
@@ -360,6 +436,13 @@ class Evaluator
   def execute_branchif((label))
     cond = pop
     if cond
+      @jump = label
+    end
+  end
+
+  def execute_branchunless((label))
+    cond = pop
+    unless cond
       @jump = label
     end
   end
@@ -502,4 +585,23 @@ class Evaluator
     # unfortunately there's no introspection API atm
     push eval(name.to_s)
   end
+
+  def execute_setconstant((name))
+    scope = pop
+    scope = current_frame._self if scope == :VM_SPECIAL_OBJECT_CONST_BASE
+
+    value = pop
+    scope.const_set(name, value)
+  end
+
+  def execute_setinstancevariable((name, _flag))
+    value = pop
+    current_frame._self.instance_variable_set(name, value)
+  end
+
+  def execute_getblockparamproxy(args)
+    push(current_frame.block)
+  end
+
+  def execute_nop(*); end
 end

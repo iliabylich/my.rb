@@ -28,6 +28,12 @@ class MethodArguments
     post_num = args_info[:post_num] || 0
     post_start = args_info[:post_start]
 
+    block_start = args_info[:block_start]
+
+    if block_start
+      block = values.pop
+    end
+
     kwdata = args_info[:keyword]
     needs_kw = kwdata && kwdata.any?
     kwvalues = nil
@@ -107,7 +113,6 @@ class MethodArguments
     end
 
     kwoptarg_ids = (@args_info[:keyword] || []).grep(Array).map { |name,| locals.find(name: name).id }
-
-    [kwoptarg_ids, labels_to_skip]
+    [kwoptarg_ids, labels_to_skip, block]
   end
 end

@@ -20,7 +20,7 @@ class Locals
   end
 
   def declared?(name: nil, id: nil)
-    @set.any? { |local| local.name == name || local.id == id }
+    @set.any? { |local| (!name.nil? && local.name == name) || (!id.nil? && local.id == id) }
   end
 
   def declare(name: nil, id: nil)

@@ -16,12 +16,13 @@ class RubyRb
   end
 
   def self.run_instruction(iseq)
-    Evaluator.new.execute(iseq.to_a)
+    Evaluator.instance.execute(iseq.to_a)
   end
 end
 require 'irb'
 require 'irb/completion'
 require 'readline'
+require '/Users/ilya/.rvm/scripts/irbrc.rb'
 
 module Kernel
   alias original_require require

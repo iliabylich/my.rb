@@ -46,6 +46,13 @@ class FrameStack
     @stack.pop
   end
 
+  def enter_block(**args)
+    @stack << BlockFrame.new(**args)
+    yield
+  ensure
+    @stack.pop
+  end
+
   def top
     @stack.last
   end
