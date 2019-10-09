@@ -79,8 +79,9 @@ class Evaluator
       @frame_stack.enter_method(
         iseq: iseq,
         parent_frame: current_frame,
-        arg_values: payload[:method_args],
         _self: payload[:_self],
+        arg_values: payload[:method_args],
+        block: payload[:block],
         &go_inside
       )
     when :block
@@ -331,7 +332,7 @@ class Evaluator
     _self = self
     define_on = DefinitionScope.new(current_frame)
     define_on.define_method(method_name) do |*method_args, &block|
-      _self.execute_iseq(body_iseq, _self: self, method_args: [*method_args, block])
+      _self.execute_iseq(body_iseq, _self: self, method_args: method_args, block: block)
     end
     method_name
   end
@@ -339,7 +340,7 @@ class Evaluator
   def __define_singleton_method(recv:, method_name:, body_iseq:)
     _self = self
     recv.define_singleton_method(method_name) do |*method_args, &block|
-      _self.execute_iseq(body_iseq, _self: self, method_args: [*method_args, block])
+      _self.execute_iseq(body_iseq, _self: self, method_args: method_args, block: block)
     end
     method_name
   end
@@ -464,7 +465,7 @@ class Evaluator
   end
 
   CHECK_TYPE = ->(klass, obj) {
-    raise TypeError, "#{obj.inspect} is not a #{klass}" unless klass === obj
+    klass === obj
   }.curry
 
   RB_OBJ_TYPES = {
@@ -505,7 +506,8 @@ class Evaluator
   def execute_checktype((type))
     item_to_check = @stack.last
     check = RB_OBJ_TYPES.fetch(type) { raise "checktype - unknown type #{type}" }
-    check.call(item_to_check)
+    result = check.call(item_to_check)
+    push(result)
   end
 
   def execute_concatstrings((count))

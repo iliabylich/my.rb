@@ -30,10 +30,6 @@ class MethodArguments
 
     block_start = args_info[:block_start]
 
-    if block_start
-      block = values.pop
-    end
-
     kwdata = args_info[:keyword]
     needs_kw = kwdata && kwdata.any?
     kwvalues = nil
@@ -45,6 +41,7 @@ class MethodArguments
         raise "expected kwargs"
       end
     end
+
 
     arg_names.each_with_index do |arg_name, idx|
       if req_args_count > 0
@@ -113,6 +110,6 @@ class MethodArguments
     end
 
     kwoptarg_ids = (@args_info[:keyword] || []).grep(Array).map { |name,| locals.find(name: name).id }
-    [kwoptarg_ids, labels_to_skip, block]
+    [kwoptarg_ids, labels_to_skip]
   end
 end
