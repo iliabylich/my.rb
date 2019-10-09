@@ -10,6 +10,15 @@ BlockFrame = FrameClass.new do
 
     @parent_frame = parent_frame
 
+    should_expand_args =
+      (arg_names = _iseq[10]).length > 1 &&
+      block_args.is_a?(Array) &&
+      block_args.length == 1
+
+    if should_expand_args
+      block_args = block_args[0]
+    end
+
     @kwoptarg_ids, @labels_to_skip, @block = MethodArguments.new(
       iseq: _iseq,
       values: block_args,

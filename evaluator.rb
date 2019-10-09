@@ -115,7 +115,7 @@ class Evaluator
         when :RUBY_EVENT_LINE
           current_frame.line = next_insn
           insns.shift
-        when :RUBY_EVENT_END, :RUBY_EVENT_CLASS, :RUBY_EVENT_RETURN, :RUBY_EVENT_B_CALL
+        when :RUBY_EVENT_END, :RUBY_EVENT_CLASS, :RUBY_EVENT_RETURN, :RUBY_EVENT_B_CALL, :RUBY_EVENT_B_RETURN
           # noop
         when Array
           # ignore
@@ -321,12 +321,8 @@ class Evaluator
 
     original_block_frame = self.current_frame
 
-    if mid == :each_pair
-      binding.irb
-    end
-
     _self = self
-    result = recv.send(mid, *args, proc { |*args| _self.execute_iseq(block_iseq, block_args: args, parent_frame: original_block_frame) })
+    result = recv.send(mid, *args) { |*args| _self.execute_iseq(block_iseq, block_args: args, parent_frame: original_block_frame) }
 
     push(result)
   end
@@ -334,16 +330,16 @@ class Evaluator
   def __define_method(method_name:, body_iseq:)
     _self = self
     define_on = DefinitionScope.new(current_frame)
-    define_on.define_method(method_name) do |*method_args|
-      _self.execute_iseq(body_iseq, _self: self, method_args: method_args)
+    define_on.define_method(method_name) do |*method_args, &block|
+      _self.execute_iseq(body_iseq, _self: self, method_args: [*method_args, block])
     end
     method_name
   end
 
   def __define_singleton_method(recv:, method_name:, body_iseq:)
     _self = self
-    recv.define_singleton_method(method_name) do |*method_args|
-      _self.execute_iseq(body_iseq, _self: self, method_args: method_args)
+    recv.define_singleton_method(method_name) do |*method_args, &block|
+      _self.execute_iseq(body_iseq, _self: self, method_args: [*method_args, block])
     end
     method_name
   end
@@ -569,10 +565,28 @@ class Evaluator
     push(recv.send(:[], *args))
   end
 
+  def execute_opt_aset((options, _flag))
+    args = options[:orig_argc].times.map { pop }.reverse
+    recv = pop
+    push(recv.send(:[]=, *args))
+  end
+
   def execute_opt_mult((options, _flag))
     args = options[:orig_argc].times.map { pop }.reverse
     recv = pop
     push(recv.send(:*, *args))
+  end
+
+  def execute_opt_length((options, _flag))
+    args = options[:orig_argc].times.map { pop }.reverse
+    recv = pop
+    push(recv.send(:length, *args))
+  end
+
+  def execute_opt_eq((options, _flag))
+    args = options[:orig_argc].times.map { pop }.reverse
+    recv = pop
+    push(recv.send(:==, *args))
   end
 
   def execute_opt_ltlt((options, _flag))
@@ -594,6 +608,11 @@ class Evaluator
     scope.const_set(name, value)
   end
 
+  def execute_getinstancevariable((name, _flag))
+    value = current_frame._self.instance_variable_get(name)
+    push(value)
+  end
+
   def execute_setinstancevariable((name, _flag))
     value = pop
     current_frame._self.instance_variable_set(name, value)
@@ -604,4 +623,17 @@ class Evaluator
   end
 
   def execute_nop(*); end
+
+  def execute_duphash((hash))
+    push(hash.dup)
+  end
+
+  def execute_dupn((n))
+    values = n.times.map { pop }.reverse
+    2.times { values.each { |value| push(value) } }
+  end
+
+  def execute_setn((n))
+    @stack[-n-1] = @stack.last
+  end
 end
