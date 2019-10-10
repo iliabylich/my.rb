@@ -3,6 +3,14 @@ require_relative './evaluator/frames'
 class Evaluator
   def initialize
     @stack = []
+    @stack.singleton_class.prepend(Module.new {
+      def pop
+        if length == 0
+          raise 'stack is empty'
+        end
+        super
+      end
+    })
     @frame_stack = FrameStack.new
 
     @jump = nil
@@ -457,7 +465,8 @@ class Evaluator
   end
 
   def execute_dup(_)
-    push(@stack.pop.dup)
+    value = @stack.pop
+    push(value); push(value)
   end
 
   CHECK_TYPE = ->(klass, obj) {
@@ -500,7 +509,7 @@ class Evaluator
   }.freeze
 
   def execute_checktype((type))
-    item_to_check = pop
+    item_to_check = @stack.pop
     check = RB_OBJ_TYPES.fetch(type) { raise "checktype - unknown type #{type}" }
     result = check.call(item_to_check)
     push(result)
@@ -636,10 +645,30 @@ class Evaluator
   end
 
   def execute_tostring(*)
-    push(pop.to_s)
+    str = pop
+    obj = pop
+    if str != obj.to_s
+      # TODO: must be some raise here
+      # if to_s failed to convert an object
+      binding.irb
+    end
+    push(str)
   end
 
   def execute_freezestring((_flag))
     @stack.last.freeze
+  end
+
+  def execute_opt_neq(_)
+    rhs = pop
+    lhs = pop
+    push(lhs != rhs)
+  end
+
+  def execute_branchnil((label))
+    value = @stac.last
+    if value.nil?
+      @jump = label
+    end
   end
 end

@@ -1,6 +1,7 @@
 require_relative "../helpers/method_arguments"
 
 MethodFrame = FrameClass.new do
+  attr_reader :arg_values
   attr_reader :kwoptarg_ids
 
   attr_accessor :block
@@ -14,6 +15,8 @@ MethodFrame = FrameClass.new do
 
     arg_names = _iseq[10].dup
     args_info = _iseq[11]
+
+    @arg_values = arg_values.dup
 
     @kwoptarg_ids, @labels_to_skip = MethodArguments.new(
       iseq: _iseq,
