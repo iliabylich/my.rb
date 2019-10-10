@@ -235,6 +235,8 @@ class Evaluator
   VM_CALL_OPT_SEND        = (0x01 << 11)
 
   def execute_opt_send_without_block((options, _flag))
+    mid = options[:mid]
+
     args = []
     kwargs = {}
 
@@ -251,7 +253,7 @@ class Evaluator
     recv = pop
 
     result =
-      case (mid = options[:mid])
+      case mid
       when :'core#define_method'
         method_name, body_iseq = *args
         __define_method(method_name: method_name, body_iseq: body_iseq)
@@ -288,12 +290,6 @@ class Evaluator
       end
 
     push(result)
-  end
-
-  BlockProxy = Struct.new(:iseq, :parent_frame) do
-    def call(*args)
-      binding.irb
-    end
   end
 
   def execute_send((options, _flag, block_iseq))
@@ -461,7 +457,7 @@ class Evaluator
   end
 
   def execute_dup(_)
-    push(@stack.last.dup)
+    push(@stack.pop.dup)
   end
 
   CHECK_TYPE = ->(klass, obj) {
@@ -504,7 +500,7 @@ class Evaluator
   }.freeze
 
   def execute_checktype((type))
-    item_to_check = @stack.last
+    item_to_check = pop
     check = RB_OBJ_TYPES.fetch(type) { raise "checktype - unknown type #{type}" }
     result = check.call(item_to_check)
     push(result)
@@ -637,5 +633,13 @@ class Evaluator
 
   def execute_setn((n))
     @stack[-n-1] = @stack.last
+  end
+
+  def execute_tostring(*)
+    push(pop.to_s)
+  end
+
+  def execute_freezestring((_flag))
+    @stack.last.freeze
   end
 end
