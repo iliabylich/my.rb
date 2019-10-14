@@ -18,6 +18,10 @@ class Runner
         options[:eval] = code
       end
 
+      opts.on('--print-missing-insns', 'Print missing insns') do
+        options[:print_missing_insns] = true
+      end
+
       opts.on('-h', '--help', 'Prints this help') do
         puts opts
         exit
@@ -25,6 +29,16 @@ class Runner
     end.parse!
 
     options[:files_to_run] = ARGV
+
+    if options[:print_missing_insns]
+      all = RubyVM::INSTRUCTION_NAMES.map { |insn| :"execute_#{insn}" }.grep_v(/execute_trace_/)
+      existing = Evaluator.instance_methods
+      existing &= all
+      missing = all - existing
+      puts "+#{existing.length} / -#{missing.length} / total: #{all.length}"
+      puts missing
+      exit(0)
+    end
 
     if options[:eval] && options[:files_to_run].any?
       raise "-e and [file].rb are mutually exclusive"

@@ -6,9 +6,9 @@ MethodFrame = FrameClass.new do
 
   attr_accessor :block
 
-  def initialize(parent_frame:, _self:, arg_values:, block:)
+  def initialize(parent_nesting:, _self:, arg_values:, block:)
     self._self = _self
-    self.nesting = parent_frame.nesting
+    self.nesting = parent_nesting
     self.locals = Locals.new
 
     self.block = block

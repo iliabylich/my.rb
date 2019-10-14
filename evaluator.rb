@@ -86,7 +86,7 @@ class Evaluator
     when :method
       @frame_stack.enter_method(
         iseq: iseq,
-        parent_frame: current_frame,
+        parent_nesting: payload[:parent_nesting],
         _self: payload[:_self],
         arg_values: payload[:method_args],
         block: payload[:block],
@@ -334,23 +334,21 @@ class Evaluator
 
   def __define_method(method_name:, body_iseq:)
     _self = self
+    parent_nesting = current_nesting
     define_on = DefinitionScope.new(current_frame)
     define_on.define_method(method_name) do |*method_args, &block|
-      _self.execute_iseq(body_iseq, _self: self, method_args: method_args, block: block)
+      _self.execute_iseq(body_iseq, _self: self, method_args: method_args, block: block, parent_nesting: parent_nesting)
     end
     method_name
   end
 
   def __define_singleton_method(recv:, method_name:, body_iseq:)
     _self = self
+    parent_nesting = current_nesting
     recv.define_singleton_method(method_name) do |*method_args, &block|
-      _self.execute_iseq(body_iseq, _self: self, method_args: method_args, block: block)
+      _self.execute_iseq(body_iseq, _self: self, method_args: method_args, block: block, parent_nesting: parent_nesting)
     end
     method_name
-  end
-
-  def execute_leave(args)
-    @return = pop
   end
 
   def execute_putspecialobject((type))
@@ -372,7 +370,8 @@ class Evaluator
 
   # Handles class/module/sclass. Have no idea why
   def execute_defineclass((name, iseq))
-    execute_iseq(iseq, name: name)
+    returned = execute_iseq(iseq, name: name)
+    push(returned)
   end
 
   def execute_pop(_)
@@ -609,7 +608,7 @@ class Evaluator
 
   def execute_setconstant((name))
     scope = pop
-    scope = current_frame._self if scope == :VM_SPECIAL_OBJECT_CONST_BASE
+    scope = DefinitionScope.new(current_frame) if scope == :VM_SPECIAL_OBJECT_CONST_BASE
 
     value = pop
     scope.const_set(name, value)
@@ -670,5 +669,51 @@ class Evaluator
     if value.nil?
       @jump = label
     end
+  end
+
+  def execute_setclassvariable((name))
+    value = pop
+    current_frame._self.class_variable_set(name, value)
+  end
+
+  # enum defined_type {
+  #   DEFINED_NOT_DEFINED,
+  #   DEFINED_NIL = 1,
+  #   DEFINED_IVAR,
+  #   DEFINED_LVAR,
+  #   DEFINED_GVAR,
+  #   DEFINED_CVAR,
+  #   DEFINED_CONST,
+  #   DEFINED_METHOD,
+  #   DEFINED_YIELD,
+  #   DEFINED_ZSUPER,
+  #   DEFINED_SELF,
+  #   DEFINED_TRUE,
+  #   DEFINED_FALSE,
+  #   DEFINED_ASGN,
+  #   DEFINED_EXPR,
+  #   DEFINED_IVAR2,
+  #   DEFINED_REF,
+  #   DEFINED_FUNC
+  # };
+  def execute_defined((defined_type, obj, needstr))
+    verdict =
+      case defined_type
+      when 2
+        ivar_name = obj
+        current_frame._self.instance_variable_defined?(ivar_name)
+      else
+        binding.irb
+      end
+
+    push(verdict)
+  end
+
+  def execute_jump((label))
+    @jump = label
+  end
+
+  def execute_adjuststack((n))
+    n.times { pop }
   end
 end

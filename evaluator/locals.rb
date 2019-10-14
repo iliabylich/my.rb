@@ -12,6 +12,8 @@ Local = Struct.new(:name, :id, :value, keyword_init: true) do
 end
 
 class Locals
+  Set = ::Set
+
   UNDEFINED = Object.new
   def UNDEFINED.inspect; 'UNDEFINED'; end
 
