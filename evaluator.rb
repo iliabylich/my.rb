@@ -487,11 +487,15 @@ class Evaluator
 
       case array
       when Array
-        copy = array.dup
-        size.times { push(copy.pop) }
+        array = array.dup
       else
-        binding.irb
+        array = [array]
       end
+
+      nils = (size - array.size)
+      nils.times { push(nil) }
+
+      array.each { |item| push(item) }
     else
       binding.irb
     end
@@ -871,5 +875,15 @@ class Evaluator
 
   def execute_opt_empty_p(_)
     push(pop.empty?)
+  end
+
+  def execute_opt_size(_)
+    push(pop.size)
+  end
+
+  def execute_opt_lt(_)
+    arg = pop
+    recv = pop
+    push(recv < arg)
   end
 end
