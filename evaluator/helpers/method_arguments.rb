@@ -31,17 +31,20 @@ class MethodArguments
     block_start = args_info[:block_start]
 
     kwdata = args_info[:keyword]
-    needs_kw = kwdata && kwdata.any?
+    needs_kw = (kwdata && kwdata.any?) || args_info[:kwrest]
     kwvalues = nil
 
     if needs_kw && kwvalues.nil?
-      kwvalues = values.pop
 
-      unless kwvalues.is_a?(Hash)
+      if values.last.is_a?(Hash)
+        # consume
+        kwvalues = values.last
+      elsif kwdata.any? { |kw| kw.is_a?(Symbol) }
         raise "expected kwargs"
+      else
+        kwvalues = {}
       end
     end
-
 
     arg_names.each_with_index do |arg_name, idx|
       if req_args_count > 0

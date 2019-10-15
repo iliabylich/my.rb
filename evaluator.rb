@@ -38,12 +38,10 @@ class Evaluator
 
       header = "#{current_frame.class} frame (#{current_frame.pretty_name} in #{current_frame.file}:#{current_frame.line})"
 
-      puts "\n\n"
-      __log "--------- BEGIN #{header} ---------"
+      __log "\n\n--------- BEGIN #{header} ---------"
 
       result = execute_insns(insns, kind)
-      __log "--------- END   #{header} ---------"
-      puts "\n\n"
+      __log "\n\n--------- END   #{header} ---------"
 
       result
     }
@@ -151,6 +149,8 @@ class Evaluator
             next_insn = insns[0]
 
             if next_insn.is_a?(Symbol) && next_insn.to_s =~ /\Alabel_/
+              break
+            elsif next_insn.is_a?(Integer) && insns[1] == :RUBY_EVENT_LINE
               break
             else
               __log "... #{insns.shift.inspect}"
@@ -317,19 +317,22 @@ class Evaluator
     args = []
     kwargs = {}
 
+    block =
+      if block_iseq
+        original_block_frame = self.current_frame
+        proc { |*args| _self.execute_iseq(block_iseq, block_args: args, parent_frame: original_block_frame) }
+      elsif (implicit_block = pop)
+        implicit_block.to_proc
+      else
+        nil
+      end
+
     if (kwarg_names = options[:kw_arg])
       kwarg_names.reverse_each do |kwarg_name|
         kwargs[kwarg_name] = pop
       end
     end
 
-    block =
-      if block_iseq
-        original_block_frame = self.current_frame
-        proc { |*args| _self.execute_iseq(block_iseq, block_args: args, parent_frame: original_block_frame) }
-      else
-        pop.to_proc
-      end
 
     args = options[:orig_argc].times.map { pop }.reverse
     if kwarg_names
@@ -655,6 +658,10 @@ class Evaluator
     current_frame._self.instance_variable_set(name, value)
   end
 
+  def execute_getblockparam(args)
+    push(current_frame.block)
+  end
+
   def execute_getblockparamproxy(args)
     push(current_frame.block)
   end
@@ -740,6 +747,8 @@ class Evaluator
         const_name = obj || current_nesting.last
         context ||= Object
         context.const_defined?(obj)
+      when DefinedType::DEFINED_GVAR
+        global_variables.include?(obj)
       else
         binding.irb
       end
@@ -804,5 +813,63 @@ class Evaluator
 
   def execute_opt_str_freeze((str, _options, _flag))
     push(str.freeze)
+  end
+
+  def execute_opt_case_dispatch((whens, else_label))
+    value = pop
+    whens.each_slice(2) do |(when_value, jump_to)|
+      if value == when_value
+        @jump = jump_to
+        return
+      end
+    end
+
+    @jump = else_label
+  end
+
+  VM_CHECKMATCH_TYPE_WHEN = 1
+  VM_CHECKMATCH_TYPE_CASE = 2
+  VM_CHECKMATCH_TYPE_RESCUE = 3
+
+  def execute_checkmatch((flag))
+    pattern = pop
+    target = pop
+    verdict =
+      case flag
+      when VM_CHECKMATCH_TYPE_WHEN
+        !!pattern
+      when VM_CHECKMATCH_TYPE_CASE
+        pattern === target
+      when VM_CHECKMATCH_TYPE_RESCUE
+        pattern.is_a?(Module) && pattern === target
+      else
+        binding.irb
+      end
+
+    push(verdict)
+  end
+
+  def execute_intern(args)
+    push(pop.to_sym)
+  end
+
+  def execute_opt_mod(_)
+    arg = pop
+    recv = pop
+    push(recv % arg)
+  end
+
+  def execute_opt_not(_)
+    push(!pop)
+  end
+
+  def execute_newrange((flag))
+    high = pop
+    low = pop
+    push(Range.new(low, high, flag == 1))
+  end
+
+  def execute_opt_empty_p(_)
+    push(pop.empty?)
   end
 end
