@@ -112,7 +112,7 @@ class Evaluator
       break if insns.empty?
 
       if @jump
-        __log "... #{insns.shift.inspect}" until insns[0] == @jump
+        __log "... #{insns.shift.inspect}" while insns[0] != @jump && insns.any?
         @jump = nil
       end
 
@@ -125,7 +125,7 @@ class Evaluator
         when :RUBY_EVENT_LINE
           current_frame.line = insn
           insns.shift
-        when :RUBY_EVENT_END, :RUBY_EVENT_CLASS, :RUBY_EVENT_RETURN, :RUBY_EVENT_B_CALL, :RUBY_EVENT_B_RETURN
+        when :RUBY_EVENT_END, :RUBY_EVENT_CLASS, :RUBY_EVENT_RETURN, :RUBY_EVENT_B_CALL, :RUBY_EVENT_B_RETURN, :RUBY_EVENT_CALL
           # noop
         when Array
           # ignore
@@ -458,6 +458,12 @@ class Evaluator
     end
 
     local = current_frame.locals.find(id: local_var_id)
+    local.set(value)
+  end
+
+  def execute_setlocal_WC_1((local_var_id))
+    value = pop
+    local = current_frame.parent_frame.locals.find(id: local_var_id)
     local.set(value)
   end
 
@@ -885,5 +891,25 @@ class Evaluator
     arg = pop
     recv = pop
     push(recv < arg)
+  end
+
+  def execute_invokeblock((options))
+    args = options[:orig_argc].times.map { pop }.reverse
+    result = current_frame.block.call(*args)
+    push(result)
+  end
+
+  def execute_opt_aset_with((key, options, flag))
+    value = pop
+    recv = pop
+    push(recv[key] = value)
+  end
+
+  def execute_topn((n))
+    push(@stack[-n-1])
+  end
+
+  def execute_throw(args)
+    binding.irb
   end
 end
