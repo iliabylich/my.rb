@@ -3,7 +3,7 @@ ClassFrame = FrameClass.new do
     define_on = DefinitionScope.new(parent_frame)
 
     klass =
-      if define_on.const_defined?(name)
+      if define_on.const_defined?(name, false)
         define_on.const_get(name)
       else
         define_on.const_set(

@@ -18,6 +18,7 @@ class FrameClass
       private :_iseq
 
       attr_reader :labels_to_skip
+      attr_reader :in_module_function_section
 
       def pretty_name
         raise NotImplementedError, "#{self.class}#pretty_name is missing"
@@ -31,6 +32,7 @@ class FrameClass
         instance.instance_eval {
           @_iseq = iseq
           @labels_to_skip = []
+          @in_module_function_section = false
         }
 
         instance.file = iseq[6]
@@ -40,6 +42,10 @@ class FrameClass
         instance.send(:initialize, **attributes)
 
         instance
+      end
+
+      def open_module_function_section!
+        @in_module_function_section = true
       end
     end
   end

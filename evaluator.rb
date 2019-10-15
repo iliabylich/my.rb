@@ -36,11 +36,13 @@ class Evaluator
     go_inside = -> {
       insns = iseq[13]
 
+      header = "#{current_frame.class} frame (#{current_frame.pretty_name} in #{current_frame.file}:#{current_frame.line})"
+
       puts "\n\n"
-      __log "--------- BEGIN #{current_frame.class} frame (#{current_frame.pretty_name}) ---------"
+      __log "--------- BEGIN #{header} ---------"
 
       result = execute_insns(insns, kind)
-      __log "--------- END   #{current_frame.class} frame (#{current_frame.pretty_name}) ---------"
+      __log "--------- END   #{header} ---------"
       puts "\n\n"
 
       result
@@ -54,7 +56,6 @@ class Evaluator
       )
     when :class
       frame_name = iseq[5]
-      superclass = pop
 
       case
       when frame_name.start_with?('<module')
@@ -69,14 +70,14 @@ class Evaluator
           iseq: iseq,
           parent_frame: current_frame,
           name: payload[:name],
-          superclass: superclass,
+          superclass: payload[:superclass],
           &go_inside
         )
       when frame_name == 'singleton class'
         @frame_stack.enter_sclass(
           iseq: iseq,
           parent_frame: current_frame,
-          of: pop,
+          of: payload[:cbase],
           &go_inside
         )
       else
@@ -105,6 +106,8 @@ class Evaluator
   end
 
   def execute_insns(insns, kind)
+    stack_size_before = @stack.size
+
     insns = insns.dup
 
     loop do
@@ -122,7 +125,7 @@ class Evaluator
       when Integer
         case next_insn
         when :RUBY_EVENT_LINE
-          current_frame.line = next_insn
+          current_frame.line = insn
           insns.shift
         when :RUBY_EVENT_END, :RUBY_EVENT_CLASS, :RUBY_EVENT_RETURN, :RUBY_EVENT_B_CALL, :RUBY_EVENT_B_RETURN
           # noop
@@ -160,7 +163,7 @@ class Evaluator
       end
     end
   rescue
-    puts "--------------\nRest (for #{kind}):"
+    puts "--------------\nRest (for #{kind} in #{current_frame.file}):"
     insns.each { |insn| p insn }
     raise
   end
@@ -245,6 +248,12 @@ class Evaluator
   def execute_opt_send_without_block((options, _flag))
     mid = options[:mid]
 
+    if mid == :module_function && options[:orig_argc] == 0
+      current_frame.open_module_function_section!
+      push(nil)
+      return
+    end
+
     args = []
     kwargs = {}
 
@@ -300,7 +309,9 @@ class Evaluator
     push(result)
   end
 
+  # always has a block, otherwise goes to opt_send_without_block
   def execute_send((options, _flag, block_iseq))
+    _self = self
     mid = options[:mid]
 
     args = []
@@ -311,6 +322,14 @@ class Evaluator
         kwargs[kwarg_name] = pop
       end
     end
+
+    block =
+      if block_iseq
+        original_block_frame = self.current_frame
+        proc { |*args| _self.execute_iseq(block_iseq, block_args: args, parent_frame: original_block_frame) }
+      else
+        pop.to_proc
+      end
 
     args = options[:orig_argc].times.map { pop }.reverse
     if kwarg_names
@@ -324,10 +343,7 @@ class Evaluator
       args = [*head, *tail]
     end
 
-    original_block_frame = self.current_frame
-
-    _self = self
-    result = recv.send(mid, *args) { |*args| _self.execute_iseq(block_iseq, block_args: args, parent_frame: original_block_frame) }
+    result = recv.send(mid, *args, &block)
 
     push(result)
   end
@@ -336,9 +352,15 @@ class Evaluator
     _self = self
     parent_nesting = current_nesting
     define_on = DefinitionScope.new(current_frame)
+
     define_on.define_method(method_name) do |*method_args, &block|
       _self.execute_iseq(body_iseq, _self: self, method_args: method_args, block: block, parent_nesting: parent_nesting)
     end
+
+    if current_frame.in_module_function_section
+      current_frame._self.send(:module_function, method_name)
+    end
+
     method_name
   end
 
@@ -370,7 +392,11 @@ class Evaluator
 
   # Handles class/module/sclass. Have no idea why
   def execute_defineclass((name, iseq))
-    returned = execute_iseq(iseq, name: name)
+    superclass = pop
+    cbase = pop
+    cbase = DefinitionScope.new(current_frame) if cbase == :VM_SPECIAL_OBJECT_CONST_BASE
+
+    returned = execute_iseq(iseq, name: name, cbase: cbase, superclass: superclass)
     push(returned)
   end
 
@@ -379,6 +405,7 @@ class Evaluator
   end
 
   def execute_opt_getinlinecache(_)
+    push(:INLINE_CACHE)
     # noop
   end
 
@@ -387,7 +414,11 @@ class Evaluator
   end
 
   def execute_getconstant((name))
-    current_nesting.reverse_each do |mod|
+    inline_cache = pop
+
+    search_in = inline_cache == :INLINE_CACHE ? current_nesting.reverse : [inline_cache]
+
+    search_in.each do |mod|
       if mod.const_defined?(name)
         const = mod.const_get(name)
         push(const)
@@ -676,32 +707,39 @@ class Evaluator
     current_frame._self.class_variable_set(name, value)
   end
 
-  # enum defined_type {
-  #   DEFINED_NOT_DEFINED,
-  #   DEFINED_NIL = 1,
-  #   DEFINED_IVAR,
-  #   DEFINED_LVAR,
-  #   DEFINED_GVAR,
-  #   DEFINED_CVAR,
-  #   DEFINED_CONST,
-  #   DEFINED_METHOD,
-  #   DEFINED_YIELD,
-  #   DEFINED_ZSUPER,
-  #   DEFINED_SELF,
-  #   DEFINED_TRUE,
-  #   DEFINED_FALSE,
-  #   DEFINED_ASGN,
-  #   DEFINED_EXPR,
-  #   DEFINED_IVAR2,
-  #   DEFINED_REF,
-  #   DEFINED_FUNC
-  # };
+  module DefinedType
+    DEFINED_NOT_DEFINED = 0
+    DEFINED_NIL = 1
+    DEFINED_IVAR = 2
+    DEFINED_LVAR = 3
+    DEFINED_GVAR = 4
+    DEFINED_CVAR = 5
+    DEFINED_CONST = 6
+    DEFINED_METHOD = 7
+    DEFINED_YIELD = 8
+    DEFINED_ZSUPER = 9
+    DEFINED_SELF = 10
+    DEFINED_TRUE = 11
+    DEFINED_FALSE = 12
+    DEFINED_ASGN = 13
+    DEFINED_EXPR = 14
+    DEFINED_IVAR2 = 15
+    DEFINED_REF = 16
+    DEFINED_FUNC = 17
+  end
+
   def execute_defined((defined_type, obj, needstr))
+    context = pop # unused in some branches
+
     verdict =
       case defined_type
-      when 2
+      when DefinedType::DEFINED_IVAR
         ivar_name = obj
         current_frame._self.instance_variable_defined?(ivar_name)
+      when DefinedType::DEFINED_CONST
+        const_name = obj || current_nesting.last
+        context ||= Object
+        context.const_defined?(obj)
       else
         binding.irb
       end
@@ -715,5 +753,56 @@ class Evaluator
 
   def execute_adjuststack((n))
     n.times { pop }
+  end
+
+  def execute_opt_div(_)
+    arg = pop
+    recv = pop
+    push(recv / arg)
+  end
+
+  def execute_opt_regexpmatch2(_)
+    arg = pop
+    recv = pop
+    push(recv =~ arg)
+  end
+
+  def execute_opt_aref_with((key, options, _flag))
+    recv = pop
+    push(recv[key])
+  end
+
+  def execute_opt_ge(args)
+    arg = pop
+    recv = pop
+    push(recv >= arg)
+  end
+
+  def execute_setglobal((name))
+    # there's no way to set a gvar by name/value
+    # but eval can reference locals
+    value = pop
+    eval("#{name} = value")
+  end
+
+  def execute_opt_and(_)
+    arg = pop
+    recv = pop
+    push(recv & arg)
+  end
+
+  def execute_opt_minus(_)
+    arg = pop
+    recv = pop
+    push(recv - arg)
+  end
+
+  def execute_toregexp((kcode, size))
+    source = size.times.map { pop }.reverse.join
+    push(Regexp.new(source, kcode))
+  end
+
+  def execute_opt_str_freeze((str, _options, _flag))
+    push(str.freeze)
   end
 end
