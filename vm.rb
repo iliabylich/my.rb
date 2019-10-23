@@ -1,6 +1,6 @@
-require_relative './evaluator/frames'
+require_relative './vm/frames'
 
-class Evaluator
+class VM
   def initialize
     @stack = []
     @stack.singleton_class.prepend(Module.new {
@@ -25,6 +25,7 @@ class Evaluator
   end
 
   def __log(string)
+    return
     print "-->" * @frame_stack.size
     print " "
     puts string
@@ -910,6 +911,6 @@ class Evaluator
   end
 
   def execute_throw(args)
-    binding.irb
+    push(:throw)
   end
 end

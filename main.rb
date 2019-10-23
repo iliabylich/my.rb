@@ -2,7 +2,7 @@
 
 require 'pp'
 require_relative './runner'
-require_relative './evaluator'
+require_relative './vm'
 
 class RubyRb
   def self.require(file)
@@ -16,7 +16,7 @@ class RubyRb
   end
 
   def self.run_instruction(iseq)
-    Evaluator.instance.execute(iseq.to_a)
+    VM.instance.execute(iseq.to_a)
   end
 end
 require 'irb'
@@ -40,6 +40,7 @@ module Kernel
         elsif File.extname(resolved) == '.rb'
           puts "EVALING #{resolved}"
           RubyRb.require(resolved)
+          $LOADED_FEATURES << resolved
           return true
         else
           # .bundle or .so, we have to load it via ruby
@@ -54,9 +55,42 @@ module Kernel
     puts "Success, diff is #{diff.inspect}"
     result
   end
+
+  alias original_require_relative require_relative
+
+  def require_relative(filepath)
+    original_filepath = filepath
+    filepath = File.join('..', filepath)
+    running = File.expand_path(VM.instance.current_frame.file)
+    resolved = File.expand_path(filepath, running)
+
+    resolved = resolved + '.rb' unless resolved.end_with?('.rb')
+
+    if resolved && File.exist?(resolved)
+      if $LOADED_FEATURES.include?(resolved)
+        puts "skipping #{resolved}"
+        return false # emulate original `require_relative`
+      else
+        puts "EVALING #{resolved}"
+        RubyRb.require(resolved)
+        $LOADED_FEATURES << resolved
+        return true
+      end
+    end
+
+    puts "Unable to do `require_relative '#{original_filepath}'"
+    before = $LOADED_FEATURES.dup
+    result = original_require_relative(original_filepath)
+    diff = $LOADED_FEATURES - before
+    puts "Success, diff is #{diff.inspect}"
+    result
+  rescue LoadError
+    binding.irb
+  end
 end
 
 runner = Runner.new
+
 runner.run(
   eval: ->(code) { RubyRb.eval(code) },
   require: ->(file) { RubyRb.require(file) }
