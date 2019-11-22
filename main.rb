@@ -35,10 +35,10 @@ module Kernel
 
       if resolved
         if $LOADED_FEATURES.include?(resolved)
-          puts "skipping #{resolved}"
+          $debug.puts "skipping #{resolved}"
           return false # emulate original `require`
         elsif File.extname(resolved) == '.rb'
-          puts "EVALING #{resolved}"
+          $debug.puts "EVALING #{resolved}"
           RubyRb.require(resolved)
           $LOADED_FEATURES << resolved
           return true
@@ -48,11 +48,11 @@ module Kernel
       end
     end
 
-    puts "Unable to do `require '#{filepath}'"
+    $debug.puts "Unable to do `require '#{filepath}'"
     before = $LOADED_FEATURES.dup
     result = original_require(filepath)
     diff = $LOADED_FEATURES - before
-    puts "Success, diff is #{diff.inspect}"
+    $debug.puts "Success, diff is #{diff.inspect}"
     result
   end
 
@@ -68,21 +68,21 @@ module Kernel
 
     if resolved && File.exist?(resolved)
       if $LOADED_FEATURES.include?(resolved)
-        puts "skipping #{resolved}"
+        $debug.puts "skipping #{resolved}"
         return false # emulate original `require_relative`
       else
-        puts "EVALING #{resolved}"
+        $debug.puts "EVALING #{resolved}"
         RubyRb.require(resolved)
         $LOADED_FEATURES << resolved
         return true
       end
     end
 
-    puts "Unable to do `require_relative '#{original_filepath}'"
+    $debug.puts "Unable to do `require_relative '#{original_filepath}'"
     before = $LOADED_FEATURES.dup
     result = original_require_relative(original_filepath)
     diff = $LOADED_FEATURES - before
-    puts "Success, diff is #{diff.inspect}"
+    $debug.puts "Success, diff is #{diff.inspect}"
     result
   rescue LoadError
     binding.irb

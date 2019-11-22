@@ -38,7 +38,7 @@ class MethodArguments
 
       if values.last.is_a?(Hash)
         # consume
-        kwvalues = values.last
+        kwvalues = values.pop
       elsif kwdata.any? { |kw| kw.is_a?(Symbol) }
         raise "expected kwargs"
       else
@@ -53,8 +53,8 @@ class MethodArguments
         arg_value = values.shift
         locals.find(name: arg_name).set(arg_value)
         req_args_count -= 1
-      elsif opt_info.any? && (rest_start ? idx < rest_start : true) && (post_start ? idx < post_start : true)
-        if values.any?
+      elsif opt_info.any?
+        if values.length > post_num
           arg_value = values.shift
           locals.find(name: arg_name).set(arg_value)
 

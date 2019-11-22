@@ -25,10 +25,9 @@ class VM
   end
 
   def __log(string)
-    return
-    print "-->" * @frame_stack.size
-    print " "
-    puts string
+    $debug.print "-->" * @frame_stack.size
+    $debug.print " "
+    $debug.puts string
   end
 
   def execute_iseq(iseq, **payload)
@@ -164,7 +163,7 @@ class VM
       end
     end
   rescue
-    puts "--------------\nRest (for #{kind} in #{current_frame.file}):"
+    $debug.puts "--------------\nRest (for #{kind} in #{current_frame.file}):"
     insns.each { |insn| p insn }
     raise
   end

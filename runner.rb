@@ -2,9 +2,13 @@ require 'optparse'
 
 class Runner
   def parse_argv
-    options = { require: [], load_path: [], eval: nil }
+    options = { require: [], load_path: [], eval: nil, pre: nil, debug: false }
     OptionParser.new do |opts|
       opts.banner = 'Usage: run.rb [options]'
+
+      opts.on('--pre=CODE') do |code|
+        options[:pre] = code
+      end
 
       opts.on('-I=PATH', 'Append load path') do |path|
         options[:load_path] << path
@@ -25,6 +29,10 @@ class Runner
       opts.on('-h', '--help', 'Prints this help') do
         puts opts
         exit
+      end
+
+      opts.on('--debug', 'Run in debug mode') do
+        options[:debug] = true
       end
     end.parse!
 
@@ -54,9 +62,16 @@ class Runner
   def run(eval:, require:)
     options = parse_argv
 
-    puts "Running with #{options.inspect}"
+    if options[:debug]
+      $debug = $stdout
+    else
+      $debug = StringIO.new
+    end
 
     options[:load_path].each { |path| $LOAD_PATH << path }
+    if (pre = options[:pre])
+      eval(pre)
+    end
     options[:require].each { |path| require[path] }
     if (code = options[:eval])
       eval[code]
