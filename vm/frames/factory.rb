@@ -35,13 +35,17 @@ class FrameClass
           @in_module_function_section = false
         }
 
-        instance.file = iseq[6]
+        instance.file = iseq.file
         instance.line = nil
-        instance.name = iseq[5]
+        instance.name = iseq.name
 
         instance.send(:initialize, **attributes)
 
         instance
+      end
+
+      def header
+        "#{self.class} frame (#{pretty_name} in #{file}:#{line})"
       end
 
       def open_module_function_section!

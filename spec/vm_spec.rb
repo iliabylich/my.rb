@@ -11,6 +11,7 @@ RSpec.describe 'VM' do
       $real_stdout = $stdout
       $fake_stdout = output
       $stdout = $fake_stdout
+      $stderr = $fake_stdout
       Binding.prepend(Module.new {
         def irb
           $stdout = $real_stdout
@@ -50,6 +51,11 @@ RSpec.describe 'VM' do
     assert_evaluates_like_mri('def m(a,b); a+b; end; p m(40, 2)')
   end
 
+  it 'handles optargs' do
+    assert_evaluates_like_mri('def m(a = 1, b = 2); [a, b]; end; p m()')
+    assert_evaluates_like_mri('def m(a = 1, b = 2); [a, b]; end; p m(3, 4)')
+  end
+
   xit 'handles complex arguments' do
     assert_evaluates_like_mri(<<-RUBY)
       def m(a, (b, *c, d), f = 1, g = 2, *h, i, (j, k), l:, m: 1, n: 2, **o)
@@ -61,11 +67,11 @@ RSpec.describe 'VM' do
   end
 
   it 'handles if branching' do
-    assert_evaluates_like_mri('p(if true; 1; else; 2; end)')
+    assert_evaluates_like_mri('a = true; p(a ? 1 : 2)')
   end
 
   it 'handles unless branching' do
-    assert_evaluates_like_mri('p(unless true; 1; else; 2; end)')
+    assert_evaluates_like_mri('a = false; p(a ? 1 : 2)')
   end
 
   it 'handles classes' do
@@ -94,7 +100,7 @@ RSpec.describe 'VM' do
       require 'ostruct'
       o = OpenStruct.new(a: 1)
       o.b = 2
-      p [o.a, o.b, o.inspect]
+      p o
     RUBY
   end
 end

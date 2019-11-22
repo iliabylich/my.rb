@@ -5,8 +5,8 @@ class MethodArguments
     @values = values.dup
     @locals = locals
 
-    @arg_names = iseq[10].dup
-    @args_info = iseq[11].dup
+    @arg_names = iseq.arg_names.dup
+    @args_info = iseq.args_info.dup
   end
 
   def extract
@@ -21,6 +21,7 @@ class MethodArguments
     req_args_count = args_info[:lead_num] || 0
 
     opt_info = (args_info[:opt] || []).dup
+    opt_info.shift
 
     rest_start = args_info[:rest_start]
     needs_rest = !rest_start.nil?
@@ -113,6 +114,12 @@ class MethodArguments
     end
 
     kwoptarg_ids = (@args_info[:keyword] || []).grep(Array).map { |name,| locals.find(name: name).id }
+
+    if labels_to_skip.any?
+      $debug.puts "Skipping #{labels_to_skip.inspect}"
+      VM.instance.jump(labels_to_skip.last)
+    end
+
     [kwoptarg_ids, labels_to_skip]
   end
 end

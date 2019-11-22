@@ -11,45 +11,31 @@ class FrameStack
     @stack.each { |item| yield item }
   end
 
-  def enter_top(**args)
+  def push_top(**args)
     @stack << TopFrame.new(**args)
-    yield
-  ensure
-    @stack.pop
   end
 
-  def enter_class(**args)
+  def push_class(**args)
     @stack << ClassFrame.new(**args)
-    yield
-  ensure
-    @stack.pop
   end
 
-  def enter_module(**args)
+  def push_module(**args)
     @stack << ModuleFrame.new(**args)
-    yield
-  ensure
-    @stack.pop
   end
 
-  def enter_sclass(**args)
+  def push_sclass(**args)
     @stack << SClassFrame.new(**args)
-    yield
-  ensure
-    @stack.pop
   end
 
-  def enter_method(**args)
+  def push_method(**args)
     @stack << MethodFrame.new(**args)
-    yield
-  ensure
-    @stack.pop
   end
 
-  def enter_block(**args)
+  def push_block(**args)
     @stack << BlockFrame.new(**args)
-    yield
-  ensure
+  end
+
+  def pop
     @stack.pop
   end
 

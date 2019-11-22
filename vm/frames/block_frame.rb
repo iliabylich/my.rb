@@ -10,7 +10,7 @@ BlockFrame = FrameClass.new do
 
     @parent_frame = parent_frame
 
-    if block_args.is_a?(Array) && block_args.length == 1 && block_args[0].is_a?(Array) && !_iseq[11][:ambiguous_param0]
+    if block_args.is_a?(Array) && block_args.length == 1 && block_args[0].is_a?(Array) && !_iseq.args_info[:ambiguous_param0]
       block_args = block_args[0]
     end
 

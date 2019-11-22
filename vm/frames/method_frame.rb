@@ -13,9 +13,6 @@ MethodFrame = FrameClass.new do
 
     self.block = block
 
-    arg_names = _iseq[10].dup
-    args_info = _iseq[11]
-
     @arg_values = arg_values.dup
 
     @kwoptarg_ids, @labels_to_skip = MethodArguments.new(
