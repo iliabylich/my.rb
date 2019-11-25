@@ -47,6 +47,7 @@ class Locals
   def pretty
     @set
       .map { |local| ["#{local.name}(#{local.id})", local.value] }
+      .sort_by { |(name, value)| name }
       .to_h
   end
 end

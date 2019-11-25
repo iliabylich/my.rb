@@ -5,7 +5,7 @@ RSpec.describe 'VM' do
     input, output = IO.pipe
     pid = fork do
       input.close
-      argv = ['-e', code]
+      argv = ['-e', code]#, '--debug']
       Object.send(:remove_const, :ARGV)
       Object.const_set(:ARGV, argv)
       $real_stdout = $stdout
@@ -56,13 +56,13 @@ RSpec.describe 'VM' do
     assert_evaluates_like_mri('def m(a = 1, b = 2); [a, b]; end; p m(3, 4)')
   end
 
-  xit 'handles complex arguments' do
+  it 'handles complex arguments' do
     assert_evaluates_like_mri(<<-RUBY)
-      def m(a, (b, *c, d), f = 1, g = 2, *h, i, (j, k), l:, m: 1, n: 2, **o)
-        [a,b,c,d,f,g,h,i,j,k,l,m,n,o]
+      def m(a, (b, bb, *c,    d, dd),  f = 1,  g = 2 + 2, *h,      i,  (j, k),   l:,   m: 1, n: 2 + 2, o: 42, **p)
+        [a,b,bb,c,d,dd,f,g,h,i,j,k,l,m,n,o]
       end
 
-      p m(1, [2, 3, 4, 5], 7, 8, [9, 10], l: 11, n: 12, o: 13)
+      p   m(1, [2, 2.2, 3, 4, 5, 5.5],   7,     8,         9, 10,  11, [12, 13], l: 11,      n: 12,    o: 13)
     RUBY
   end
 

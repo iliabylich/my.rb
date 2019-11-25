@@ -31,8 +31,8 @@ class MethodArguments
 
     block_start = args_info[:block_start]
 
-    kwdata = args_info[:keyword]
-    needs_kw = (kwdata && kwdata.any?) || args_info[:kwrest]
+    kwdata = args_info[:keyword] || []
+    needs_kw = kwdata.any? || args_info[:kwrest]
     kwvalues = nil
 
     if needs_kw && kwvalues.nil?
@@ -47,79 +47,92 @@ class MethodArguments
       end
     end
 
-    arg_names.each_with_index do |arg_name, idx|
-      if req_args_count > 0
-        # req pos argument
-        arg_name += 1 if arg_name.is_a?(Integer)
-        arg_value = values.shift
-        locals.find(name: arg_name).set(arg_value)
-        req_args_count -= 1
-      elsif opt_info.any?
-        if values.length > post_num
-          arg_value = values.shift
-          locals.find(name: arg_name).set(arg_value)
+    req_args_count.times do
+      arg_name = arg_names.shift
+      arg_name += 1 if arg_name.is_a?(Integer)
+      arg_value = values.shift
+      locals.find(name: arg_name).set(arg_value)
+      $debug.puts("req: #{arg_name} = #{arg_value}")
+    end
 
-          # skip default value initialization
-          labels_to_skip << opt_info.first
-        end
+    opt_info.each do |label|
+      arg_name = arg_names.shift
+      next if values.none? || values.length < post_num
+      arg_value = values.shift
+      locals.find(name: arg_name).set(arg_value)
+      $debug.puts("opt: #{arg_name} = #{arg_value}")
+      VM.instance.jump(label)
+    end
 
-        opt_info.shift
-      elsif needs_rest
-        rest_value = values
-        locals.find(name: arg_name).set(rest_value)
-        needs_rest = false
-      elsif post_num > 0
-        arg_name += 1 if arg_name.is_a?(Integer)
-        arg_value = values.shift
-        locals.find(name: arg_name).set(arg_value)
-        post_num -= 1
-      elsif kwdata && (kwarg_info = kwdata.detect { |name| name == arg_name })
-        # kwarg
-        if kwvalues.key?(arg_name)
-          arg_value = kwvalues.delete(arg_name)
-          locals.find(name: arg_name).set(arg_value)
-        else
-          raise "missing kwarg #{arg_name.inspect}"
-        end
-      elsif kwdata && (kwoptarg_info = kwdata.detect { |(name,_)| name == arg_name })
-        # kwoptarg
+    if rest_start
+      arg_name = arg_names.shift
+      arg_value = values[0..-(post_num + 1)]
+      locals.find(name: arg_name).set(arg_value)
+      $debug.puts("rest: #{arg_name} = #{arg_value.inspect}")
+
+      @values = values[post_num..-1]
+    end
+
+    post_num.times do
+      arg_name = arg_names.shift
+      arg_name += 1 if arg_name.is_a?(Integer)
+      arg_value = values.shift
+      locals.find(name: arg_name).set(arg_value)
+      $debug.puts("post: #{arg_name} = #{arg_value}")
+    end
+
+    kwdata.each do |kwarg|
+      case kwarg
+      when Array
+        # kwopt
+        arg_name = kwarg[0]
+        arg_names.delete(arg_name)
+
         local = locals.find(name: arg_name)
 
         if kwvalues.key?(arg_name)
           # value given
           arg_value = kwvalues.delete(arg_name)
+          $debug.puts("kwopt: #{arg_name} = #{arg_value}")
           local.set(arg_value)
-        elsif kwoptarg_info.length == 2
-          # no value in arglist, but simple inlined default value in insn
-          _, default = *kwoptarg_info
-          local.set(default)
-
-          # skip default value initialization
-          labels_to_skip << opt_info.first
+        elsif kwarg.length == 2
+          # inline default value
+          arg_value = kwarg[1]
+          $debug.puts("kwopt: #{arg_name} = #{arg_value}")
+          local.set(arg_value)
         else
-          # no value in arglist, complex default value is set via insn in the future
+          # there must be some insns to fill it
         end
-
-        opt_info.shift
-      elsif kwdata
-        # kwrestarg
-        kwrest = kwvalues.reverse_each.to_a.to_h
-        locals.find(id: arg_name).set(kwrest)
-        kwdata = nil
       else
+        # kwreq
+        arg_name = kwarg
+        arg_names.delete(arg_name)
 
-        # All other variables are getting post-processed via insns, that's the end
-        break
+        if kwvalues.key?(arg_name)
+          arg_value = kwvalues.delete(arg_name)
+          locals.find(name: arg_name).set(arg_value)
+          $debug.puts("kwreq: #{arg_name} = #{arg_value}")
+        else
+          raise "missing kwarg #{arg_name.inspect}"
+        end
       end
     end
 
-    kwoptarg_ids = (@args_info[:keyword] || []).grep(Array).map { |name,| locals.find(name: name).id }
+    if args_info[:kwrest]
+      arg_value = kwvalues.reverse_each.to_a.to_h
 
-    if labels_to_skip.any?
-      $debug.puts "Skipping #{labels_to_skip.inspect}"
-      VM.instance.jump(labels_to_skip.last)
+      if arg_names[0].is_a?(Integer)
+        # internal variable that holds a copy of **kwrest
+        arg_name = arg_names.shift
+        arg_name += 1 if arg_name.is_a?(Integer)
+        locals.find(name: arg_name).set(arg_value)
+        $debug.puts("kwrest(internal #{arg_names}): #{arg_value.inspect}")
+      end
+
+      arg_name = arg_names.shift
+      locals.find(name: arg_name).set(arg_value)
+
+      $debug.puts("kwreq: #{arg_name} = #{arg_value.inspect}")
     end
-
-    [kwoptarg_ids, labels_to_skip]
   end
 end

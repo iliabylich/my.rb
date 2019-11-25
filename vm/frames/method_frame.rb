@@ -15,11 +15,13 @@ MethodFrame = FrameClass.new do
 
     @arg_values = arg_values.dup
 
-    @kwoptarg_ids, @labels_to_skip = MethodArguments.new(
+    MethodArguments.new(
       iseq: _iseq,
       values: arg_values,
       locals: locals
     ).extract
+
+    @kwoptarg_ids = (_iseq.args_info[:keyword] || []).grep(Array).map { |name,| locals.find(name: name).id }
   end
 
   def pretty_name

@@ -298,22 +298,47 @@ class Executor
   end
 
   def execute_expandarray((size, flag))
-    if flag == 0
-      array = pop
+    array = a = pop
 
-      case array
-      when Array
-        array = array.dup
-      else
-        array = [array]
+    case array
+    when Array
+      array = array.dup
+    else
+      array = [array]
+    end
+
+    splat = (flag & 0x01)
+    space_size = size + splat
+    values_to_push = []
+
+    if space_size == 0
+      # no space left on stack
+    elsif (flag & 0x02).nonzero?
+      # postarg
+
+      if size < array.size
+        (size - array.size).times { values_to_push.push(nil) }
       end
 
-      nils = (size - array.size)
-      nils.times { push(nil) }
+      [size, array.size].min.times { values_to_push.push(array.pop) }
 
-      array.each { |item| push(item) }
+      if splat.nonzero?
+        values_to_push.push(array)
+      end
+
+      values_to_push.each { |item| push(item) }
     else
-      binding.irb
+      if size < array.size
+        (size - array.size).times { values_to_push.push(nil) }
+      end
+
+      [size, array.size].min.times { values_to_push.push(array.shift) }
+
+      if splat.nonzero?
+        values_to_push.push(array)
+      end
+
+      values_to_push.reverse_each { |item| push(item) }
     end
   end
 
@@ -398,7 +423,7 @@ class Executor
     method = recv.method(mid).super_method
     args = options[:orig_argc].times.map { pop }.reverse
 
-    if options[:flag] & VM_CALL_ARGS_SPLAT
+    if (options[:flag] & VM_CALL_ARGS_SPLAT).nonzero?
       *head, tail = args
       args = [*head, *tail]
     end
