@@ -37,8 +37,8 @@ RSpec.describe 'VM' do
   end
 
   def assert_evaluates_like_mri(code)
-    actual = evaluate_using_custom_vm(code)
     expected = evalate_using_mri(code)
+    actual = evaluate_using_custom_vm(code)
 
     expect(actual).to eq(expected)
   end
@@ -101,6 +101,27 @@ RSpec.describe 'VM' do
       o = OpenStruct.new(a: 1)
       o.b = 2
       p o
+    RUBY
+  end
+
+  it 'handles Set' do
+    assert_evaluates_like_mri(<<-RUBY)
+      %i[Set SortedSet].each { |const_name| Object.send(:remove_const, const_name) }
+      $LOADED_FEATURES.reject! { |f| f =~ Regexp.new(Regexp.escape("/set.rb")) }
+      require 'set'
+      set = Set[1, 2, 3]
+      p set
+      set << 3
+      set << 4
+      p set
+    RUBY
+  end
+
+  it 'supports blocks' do
+    assert_evaluates_like_mri(<<-RUBY)
+      p [1,2,3].each do |e|
+        puts e
+      end
     RUBY
   end
 end
