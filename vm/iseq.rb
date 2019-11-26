@@ -6,8 +6,21 @@ class ISeq
     @insns = ruby_iseq[13].dup
   end
 
+  def handlers
+    @ruby_iseq[12]
+  end
+
+  def handler(name)
+    _name, iseq = handlers.detect { |handler| handler[0] == name }
+    iseq
+  end
+
   def file
     @ruby_iseq[6]
+  end
+
+  def line
+    @ruby_iseq[8]
   end
 
   def kind

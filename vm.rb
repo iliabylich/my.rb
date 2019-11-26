@@ -5,6 +5,13 @@ require_relative './vm/iseq'
 class VM
   attr_reader :stack
 
+  class LocalJumpError < ::LocalJumpError
+    def initialize(value)
+      @value = value
+    end
+    attr_reader :value
+  end
+
   def initialize
     @stack = []
     @stack.singleton_class.prepend(Module.new {
@@ -29,18 +36,22 @@ class VM
   def execute(iseq, **payload)
     iseq = ISeq.new(iseq)
 
-    @iseq_stack.push(iseq)
-
+    push_iseq(iseq)
     push_frame_for_iseq(iseq, **payload)
+
     __log "\n\n--------- BEGIN #{current_frame.header} ---------"
-
-    result = evaluate_until_stack_size_is(@iseq_stack.size - 1)
-
+    evaluate_last_iseq
+    result = current_frame.returning
     __log "\n\n--------- END   #{current_frame.header} ---------"
+
     pop_frame
+    pop_iseq
 
     result
   end
+
+  def push_iseq(iseq); @iseq_stack.push(iseq); end
+  def pop_iseq;        @iseq_stack.pop;        end
 
   def push_frame_for_iseq(iseq, **payload)
     case iseq.kind
@@ -87,20 +98,48 @@ class VM
         parent_frame: payload[:parent_frame],
         block_args: payload[:block_args]
       )
+    when :rescue
+      @frame_stack.push_rescue(
+        iseq: iseq,
+        parent_frame: current_frame,
+        caught: payload[:caught]
+      )
+    when :ensure
+      @frame_stack.push_ensure(
+        iseq: iseq,
+        parent_frame: current_frame
+      )
     else
       binding.irb
     end
   end
 
   def pop_frame
+    error_to_reraise = nil
+
+    if (error = current_frame.current_error)
+      if (rescue_iseq = current_frame._iseq.handler(:rescue))
+        execute(rescue_iseq, caught: error)
+      else
+        error_to_reraise = error
+      end
+
+      if (ensure_iseq = current_frame._iseq.handler(:ensure))
+        execute(ensure_iseq)
+      end
+    end
+
     @frame_stack.pop
+
+    raise error_to_reraise if error_to_reraise
   end
 
-  def evaluate_until_stack_size_is(size)
-    last_value = :UNDEFINED
+  def evaluate_last_iseq
+    size = @iseq_stack.size
 
     loop do
-      break if @iseq_stack.size == size
+      raise 'malformed iseq stack' if @iseq_stack.size < size
+      break if @iseq_stack.size == size && @iseq_stack.last.insns.empty?
 
       if current_iseq.insns.empty?
         @iseq_stack.pop
@@ -110,21 +149,24 @@ class VM
       current_insn = current_iseq.shift_insn
 
       begin
-        last_value = execute_insn(current_insn)
+        execute_insn(current_insn)
       rescue
         $debug.puts "--------------\nRest (for #{current_frame.pretty_name} in #{current_frame.file}):"
         current_iseq.insns.each { |insn| p insn }
         raise
       end
     end
-
-    last_value
   end
 
   def __log(string)
     $debug.print "-->" * @frame_stack.size
     $debug.print " "
     $debug.puts string
+  end
+
+  def clear_current_iseq
+    current_iseq.insns.each { |insn| report_skipped_insn(insn) }
+    current_iseq.insns.clear
   end
 
   def execute_insn(insn)
@@ -135,11 +177,9 @@ class VM
       current_frame.line = @last_numeric_insn
       @last_numeric_insn = nil
     when [:leave]
-      returning = @stack.pop
+      current_frame.returning = returning = @stack.pop
       __log "#{insn.inspect} (returning #{returning.inspect})"
-      current_iseq.insns.each { |insn| report_skipped_insn(insn) }
-      current_iseq.insns.clear
-      return returning
+      clear_current_iseq
     when Array
       name, *payload = insn
 
@@ -152,7 +192,9 @@ class VM
         __log insn.inspect
       end
 
-      @executor.send(:"execute_#{name}", payload)
+      with_error_handling do
+        @executor.send(:"execute_#{name}", payload)
+      end
     when :RUBY_EVENT_END, :RUBY_EVENT_CLASS, :RUBY_EVENT_RETURN, :RUBY_EVENT_B_CALL, :RUBY_EVENT_B_RETURN, :RUBY_EVENT_CALL
       # ignore
     when /label_\d+/
@@ -160,8 +202,13 @@ class VM
     else
       binding.irb
     end
+  end
 
-    return
+  def with_error_handling
+    yield
+  rescue => e
+    clear_current_iseq
+    current_frame.current_error = e
   end
 
   def report_skipped_insn(insn)
@@ -184,7 +231,7 @@ class VM
     insns = current_iseq.insns
 
     loop do
-      binding.irb if insns.empty?
+      raise 'empty insns list, cannot jump' if insns.empty?
       break if insns[0] == label
       report_skipped_insn(insns.shift)
     end

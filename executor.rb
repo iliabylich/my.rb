@@ -3,7 +3,7 @@ class Executor
 
   def stack; vm.stack; end
 
-  def push(object); stack.push(object); end
+  def push(object); stack.push(object) unless vm.current_frame.exiting?; end
   def pop;          stack.pop;          end
   def reset_stack;  stack = [];         end
 
@@ -250,6 +250,12 @@ class Executor
     push(array)
   end
 
+  def execute_getlocal((local_var_id, level))
+    frame = level.times.inject(current_frame) { |f| f.parent_frame }
+    local = frame.locals.find(id: local_var_id)
+    push(local.get)
+  end
+
   def execute_getlocal_WC_0((local_var_id))
     local = current_frame.locals.find(id: local_var_id)
     push(local.get)
@@ -262,18 +268,25 @@ class Executor
 
   def execute_setlocal_WC_0((local_var_id))
     value = pop
+    locals = current_frame.locals
 
-    unless current_frame.locals.declared?(id: local_var_id)
-      current_frame.locals.declare(id: local_var_id)
+    unless locals.declared?(id: local_var_id)
+      locals.declare(id: local_var_id)
     end
 
-    local = current_frame.locals.find(id: local_var_id)
+    local = locals.find(id: local_var_id)
     local.set(value)
   end
 
   def execute_setlocal_WC_1((local_var_id))
     value = pop
-    local = current_frame.parent_frame.locals.find(id: local_var_id)
+    locals = current_frame.parent_frame.locals
+
+    unless locals.declared?(id: local_var_id)
+      locals.declare(id: local_var_id)
+    end
+
+    local = locals.find(id: local_var_id)
     local.set(value)
   end
 
@@ -744,7 +757,58 @@ class Executor
     push(stack[-n-1])
   end
 
-  def execute_throw(args)
-    push(:throw)
+  VM_THROW_NO_ESCAPE_FLAG = 0x8000
+  VM_THROW_STATE_MASK = 0xff
+
+  RUBY_TAG_NONE = 0x0
+  RUBY_TAG_RETURN = 0x1
+  RUBY_TAG_BREAK = 0x2
+  RUBY_TAG_NEXT = 0x3
+  RUBY_TAG_RETRY = 0x4
+  RUBY_TAG_REDO = 0x5
+  RUBY_TAG_RAISE = 0x6
+  RUBY_TAG_THROW = 0x7
+  RUBY_TAG_FATAL = 0x8
+  RUBY_TAG_MASK = 0xf
+
+  def _do_throw(throw_obj)
+    return if throw_obj.nil?
+
+    if throw_obj.is_a?(Exception)
+      raise throw_obj
+    else
+      # raise VM::LocalJumpError.new(throw_obj)
+    end
+  end
+
+  def execute_throw((throw_state))
+    state = throw_state & VM_THROW_STATE_MASK
+    flag  = throw_state & VM_THROW_NO_ESCAPE_FLAG
+    throw_obj = pop
+
+    if state != 0
+      # throw start
+      case state
+      when 1
+        # return
+        push(throw_obj)
+
+        frame = current_frame
+
+        until frame.can_return?
+          vm.__log "... scheduling force [:leave] (on #{frame.name})"
+          vm.stack.push(:__unused)
+          frame.exit!
+          frame = frame.parent_frame
+        end
+
+        frame.exit!
+      else
+        binding.irb
+      end
+    else
+      # throw continue
+      _do_throw(throw_obj)
+    end
   end
 end

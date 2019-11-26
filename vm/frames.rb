@@ -10,5 +10,7 @@ require_relative './frames/module_frame'
 require_relative './frames/sclass_frame'
 require_relative './frames/method_frame'
 require_relative './frames/block_frame'
+require_relative './frames/ensure_frame'
+require_relative './frames/rescue_frame'
 
 require_relative './frame_stack'

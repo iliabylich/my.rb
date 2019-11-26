@@ -35,6 +35,14 @@ class FrameStack
     @stack << BlockFrame.new(**args)
   end
 
+  def push_rescue(**args)
+    @stack << RescueFrame.new(**args)
+  end
+
+  def push_ensure(**args)
+    @stack << EnsureFrame.new(**args)
+  end
+
   def pop
     @stack.pop
   end

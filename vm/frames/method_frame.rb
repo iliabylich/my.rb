@@ -27,4 +27,8 @@ MethodFrame = FrameClass.new do
   def pretty_name
     "#{_self.class}##{name}"
   end
+
+  def can_return?
+    true
+  end
 end

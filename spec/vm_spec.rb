@@ -1,25 +1,29 @@
 require 'spec_helper'
 
 RSpec.describe 'VM' do
-  def evaluate_using_custom_vm(code)
+  def evaluate_using_custom_vm(code, debug: false)
     input, output = IO.pipe
     pid = fork do
       input.close
-      argv = ['-e', code]#, '--debug']
+      argv = ['-e', code, *(debug ? ['--debug'] : [])]
       Object.send(:remove_const, :ARGV)
       Object.const_set(:ARGV, argv)
-      $real_stdout = $stdout
-      $fake_stdout = output
-      $stdout = $fake_stdout
-      $stderr = $fake_stdout
-      Binding.prepend(Module.new {
-        def irb
-          $stdout = $real_stdout
-          super
-        ensure
-          $stdout = $fake_stdout
-        end
-      })
+
+      if !debug
+        $real_stdout = $stdout
+        $fake_stdout = output
+        $stdout = $fake_stdout
+        $stderr = $fake_stdout
+        Binding.prepend(Module.new {
+          def irb
+            $stdout = $real_stdout
+            super
+          ensure
+            $stdout = $fake_stdout
+          end
+        })
+      end
+
       require_relative('../main.rb')
       output.close
     end
@@ -122,6 +126,57 @@ RSpec.describe 'VM' do
       p [1,2,3].each do |e|
         puts e
       end
+    RUBY
+  end
+
+  it 'supports exceptions' do
+    assert_evaluates_like_mri(<<-RUBY)
+      b = 2
+      begin
+        a = 1
+        raise 'err'
+      rescue => e;
+        c = 3
+        p e
+      else
+        p 2
+      ensure
+        p 3
+      end
+    RUBY
+
+    assert_evaluates_like_mri(<<-RUBY)
+      begin
+        p 1
+      rescue => e;
+        p e
+      else
+        p 2
+      ensure
+        p 3
+      end
+    RUBY
+  end
+
+  it 'supports longjmp' do
+    assert_evaluates_like_mri(<<-RUBY)
+      def m
+        [1].each do |x|
+          [2].each do |y|
+            [3].each do |z|
+              return [x,y,z]
+            end
+          end
+        end
+      end
+
+      p m
+
+      def m
+        proc { return 10 }.call
+      end
+
+      p m
     RUBY
   end
 end
