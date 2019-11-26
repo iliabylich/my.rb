@@ -1,6 +1,6 @@
 require 'optparse'
 
-class Runner
+class CLI
   def parse_argv
     options = { require: [], load_path: [], eval: nil, pre: nil, debug: false }
     OptionParser.new do |opts|

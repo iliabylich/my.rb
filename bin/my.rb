@@ -1,8 +1,8 @@
 #! /usr/bin/env ruby
 
 require 'pp'
-require_relative './runner'
-require_relative './vm'
+require_relative '../cli'
+require_relative '../vm'
 
 class RubyRb
   def self.require(file)
@@ -89,9 +89,9 @@ module Kernel
   end
 end
 
-runner = Runner.new
+cli = CLI.new
 
-runner.run(
+cli.run(
   eval: ->(code) { RubyRb.eval(code) },
   require: ->(file) { RubyRb.require(file) }
 )

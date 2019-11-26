@@ -24,7 +24,7 @@ RSpec.describe 'VM' do
         })
       end
 
-      require_relative('../main.rb')
+      require_relative('../bin/my')
       output.close
     end
     Process.wait(pid)
