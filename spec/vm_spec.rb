@@ -180,7 +180,7 @@ RSpec.describe 'VM' do
     RUBY
   end
 
-  it 'supports longjmp' do
+  it 'supports longjmp via return' do
     assert_evaluates_like_mri(<<-RUBY)
       def m
         [1].each do |x|
@@ -240,6 +240,23 @@ RSpec.describe 'VM' do
         p i
         i += 1
       end
+    RUBY
+  end
+
+  it 'handles longjmp via next' do
+    assert_evaluates_like_mri(<<-RUBY)
+      x = [1,2,3].map do |e|
+        begin
+          if e == 2
+            raise '2 is not allowed'
+          end
+          e
+        rescue
+          next 42
+        end
+      end
+
+      p x
     RUBY
   end
 end

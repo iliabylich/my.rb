@@ -28,9 +28,8 @@ class FrameClass
         raise NotImplementedError, "#{self.class}#pretty_name is missing"
       end
 
-      def can_return?
-        false
-      end
+      def can_return?;  false; end
+      def can_do_next?; false; end
 
       def prepare; end
 

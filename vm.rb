@@ -29,6 +29,26 @@ class VM
     })
     @frame_stack = FrameStack.new
     @iseq_stack = []
+    # @frame_stack.singleton_class.prepend(Module.new {
+    #   def push(v)
+    #     puts "frame.push"
+    #     super(v)
+    #   end
+    #   def pop
+    #     puts "frame.pop"
+    #     super()
+    #   end
+    # })
+    # @iseq_stack.singleton_class.prepend(Module.new {
+    #   def push(v)
+    #     puts "iseq.push"
+    #     super(v)
+    #   end
+    #   def pop
+    #     puts "iseq.pop"
+    #     super()
+    #   end
+    # })
     @executor = Executor.new
 
     @jump = nil
@@ -46,10 +66,9 @@ class VM
 
     __log "\n\n--------- BEGIN #{current_frame.header} ---------"
     evaluate_last_iseq
-    result = current_frame.returning
     __log "\n\n--------- END   #{current_frame.header} ---------"
 
-    pop_frame
+    result = pop_frame
     pop_iseq
 
     result
@@ -140,6 +159,8 @@ class VM
         execute(ensure_iseq)
       end
     end
+
+    current_frame.returning
   ensure
     @frame_stack.pop
 

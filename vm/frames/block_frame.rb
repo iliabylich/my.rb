@@ -24,4 +24,8 @@ BlockFrame = FrameClass.new do
   def pretty_name
     name
   end
+
+  def can_do_next?
+    true
+  end
 end

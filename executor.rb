@@ -802,6 +802,21 @@ class Executor
         end
 
         frame.exit!
+      when 3
+        # next inside rescue/ensure, inside pop_frame,
+        # so current_frame is about to die
+
+        frame = current_frame
+
+        until frame.can_do_next?
+          vm.__log "... scheduling force [:leave] (on #{frame.name})"
+          vm.stack.push(:__unused)
+          frame.exit!
+          frame = frame.parent_frame
+        end
+
+        frame.returning = throw_obj
+        frame.exit!
       else
         binding.irb
       end
