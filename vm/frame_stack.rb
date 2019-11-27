@@ -11,36 +11,41 @@ class FrameStack
     @stack.each { |item| yield item }
   end
 
+  def push(frame)
+    @stack << frame
+    frame.prepare
+  end
+
   def push_top(**args)
-    @stack << TopFrame.new(**args)
+    push TopFrame.new(**args)
   end
 
   def push_class(**args)
-    @stack << ClassFrame.new(**args)
+    push ClassFrame.new(**args)
   end
 
   def push_module(**args)
-    @stack << ModuleFrame.new(**args)
+    push ModuleFrame.new(**args)
   end
 
   def push_sclass(**args)
-    @stack << SClassFrame.new(**args)
+    push SClassFrame.new(**args)
   end
 
   def push_method(**args)
-    @stack << MethodFrame.new(**args)
+    push MethodFrame.new(**args)
   end
 
   def push_block(**args)
-    @stack << BlockFrame.new(**args)
+    push BlockFrame.new(**args)
   end
 
   def push_rescue(**args)
-    @stack << RescueFrame.new(**args)
+    push RescueFrame.new(**args)
   end
 
   def push_ensure(**args)
-    @stack << EnsureFrame.new(**args)
+    push EnsureFrame.new(**args)
   end
 
   def pop

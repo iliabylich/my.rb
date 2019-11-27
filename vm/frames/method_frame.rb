@@ -14,7 +14,9 @@ MethodFrame = FrameClass.new do
     self.block = block
 
     @arg_values = arg_values.dup
+  end
 
+  def prepare
     MethodArguments.new(
       iseq: _iseq,
       values: arg_values,

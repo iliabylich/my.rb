@@ -32,6 +32,8 @@ class FrameClass
         false
       end
 
+      def prepare; end
+
       class_eval(&block)
 
       def self.new(iseq:, **attributes)

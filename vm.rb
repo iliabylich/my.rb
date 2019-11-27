@@ -174,11 +174,11 @@ class VM
   end
 
   def focused?
-    !debug_focus_on.nil? && current_frame.pretty_name.include?(debug_focus_on)
+    current_frame.pretty_name.include?(debug_focus_on)
   end
 
   def __log(string)
-    return unless focused?
+    return if debug_focus_on && !focused?
 
     if debug_show_stack
       $debug.puts "Stack: #{@stack.inspect}"
@@ -211,10 +211,6 @@ class VM
   end
 
   def execute_insn(insn)
-    if @frame_stack.size != @iseq_stack.size
-      raise 'frame_stack and iseq_stack are inconsisten'
-    end
-
     case insn
     when Integer
       @last_numeric_insn = insn
@@ -226,19 +222,27 @@ class VM
       __log "#{insn.inspect} (returning #{returning.inspect})"
       clear_current_iseq
     when Array
-      name, *payload = insn
-
-      __log pretty_insn(insn).inspect
-
-      with_error_handling do
-        @executor.send(:"execute_#{name}", payload)
-      end
+      execute_array_insn(insn)
     when :RUBY_EVENT_END, :RUBY_EVENT_CLASS, :RUBY_EVENT_RETURN, :RUBY_EVENT_B_CALL, :RUBY_EVENT_B_RETURN, :RUBY_EVENT_CALL
       # ignore
     when /label_\d+/
       # ignore
     else
       binding.irb
+    end
+  end
+
+  def execute_array_insn(insn)
+    if @frame_stack.size != @iseq_stack.size
+      raise 'frame_stack and iseq_stack are inconsisten'
+    end
+
+    name, *payload = insn
+
+    __log pretty_insn(insn).inspect
+
+    with_error_handling do
+      @executor.send(:"execute_#{name}", payload)
     end
   end
 
