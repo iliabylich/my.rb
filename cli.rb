@@ -102,6 +102,6 @@ class CLI
     if (code = options[:eval])
       eval[code]
     end
-    options[:files_to_run].each { |path| require[path] }
+    options[:files_to_run].each { |path| $0 = path; require[path] }
   end
 end
