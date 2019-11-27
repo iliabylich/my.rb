@@ -228,4 +228,18 @@ RSpec.describe 'VM' do
       p [a,b,c,d,e,f,g,h,i,j,k]
     RUBY
   end
+
+  it 'handles loops' do
+    assert_evaluates_like_mri(<<-RUBY)
+      for i in [1,2,3,4,5] do
+        p i
+      end
+
+      i = 0
+      while i < 5
+        p i
+        i += 1
+      end
+    RUBY
+  end
 end

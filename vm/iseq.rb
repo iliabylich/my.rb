@@ -3,7 +3,7 @@ class ISeq
 
   def initialize(ruby_iseq)
     @ruby_iseq = ruby_iseq
-    @insns = ruby_iseq[13].dup
+    reset!
   end
 
   def handlers
@@ -13,6 +13,14 @@ class ISeq
   def handler(name)
     _name, iseq = handlers.detect { |handler| handler[0] == name }
     iseq
+  end
+
+  def initially_had_insn?(insn)
+    @ruby_iseq[13].include?(insn)
+  end
+
+  def reset!
+    @insns = @ruby_iseq[13].dup
   end
 
   def file

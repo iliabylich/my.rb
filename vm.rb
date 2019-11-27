@@ -285,7 +285,17 @@ class VM
     insns = current_iseq.insns
 
     loop do
-      raise InternalError, 'empty insns list, cannot jump' if insns.empty?
+      if insns.empty?
+        # it can be a jump back via `while` loop
+        if current_iseq.initially_had_insn?(label)
+          current_iseq.reset!
+          current_iseq.insns.drop_while { |insn| insn != label }
+          insns = current_iseq.insns
+        else
+          raise InternalError, 'empty insns list, cannot jump'
+        end
+      end
+
       break if insns[0] == label
       report_skipped_insn(insns.shift)
     end
