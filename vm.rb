@@ -15,12 +15,14 @@ class VM
     attr_reader :value
   end
 
+  class InternalError < ::RuntimeError; end
+
   def initialize
     @stack = []
     @stack.singleton_class.prepend(Module.new {
       def pop
         if length == 0
-          raise 'stack is empty, there is nothing to pop'
+          raise InternalError, 'stack is empty, there is nothing to pop'
         end
         super
       end
@@ -53,8 +55,15 @@ class VM
     result
   end
 
-  def push_iseq(iseq); @iseq_stack.push(iseq); end
-  def pop_iseq;        @iseq_stack.pop;        end
+  def push_iseq(iseq)
+    @iseq_stack.push(iseq)
+  end
+  def pop_iseq
+    @iseq_stack.pop
+    if @frame_stack.size != @iseq_stack.size
+      raise InternalError, 'frame_stack and iseq_stack are inconsisten'
+    end
+  end
 
   def push_frame_for_iseq(iseq, **payload)
     case iseq.kind
@@ -131,7 +140,7 @@ class VM
         execute(ensure_iseq)
       end
     end
-
+  ensure
     @frame_stack.pop
 
     raise error_to_reraise if error_to_reraise
@@ -142,11 +151,12 @@ class VM
     initial_stack_size = @stack.size
 
     loop do
-      raise 'malformed iseq stack' if @iseq_stack.size < initial_iseq_stack_size
+      raise InternalError, 'malformed iseq stack' if @iseq_stack.size < initial_iseq_stack_size
       break if @iseq_stack.size == initial_iseq_stack_size && @iseq_stack.last.insns.empty?
 
       if current_iseq.insns.empty?
-        @iseq_stack.pop
+        pop_frame
+        pop_iseq
         next
       end
 
@@ -168,7 +178,7 @@ class VM
       end
 
       if @stack.size < initial_stack_size
-        raise 'initial stack is readonly, too many pops'
+        raise InternalError, 'initial stack is readonly, too many pops'
       end
     end
   end
@@ -233,10 +243,6 @@ class VM
   end
 
   def execute_array_insn(insn)
-    if @frame_stack.size != @iseq_stack.size
-      raise 'frame_stack and iseq_stack are inconsisten'
-    end
-
     name, *payload = insn
 
     __log pretty_insn(insn).inspect
@@ -249,6 +255,12 @@ class VM
   def with_error_handling
     yield
   rescue => e
+    if e.is_a?(InternalError)
+      # our error, just re-raise ie
+      raise
+    end
+
+    # error from the inerpreted code
     clear_current_iseq
     current_frame.current_error = e
   end
@@ -273,7 +285,7 @@ class VM
     insns = current_iseq.insns
 
     loop do
-      raise 'empty insns list, cannot jump' if insns.empty?
+      raise InternalError, 'empty insns list, cannot jump' if insns.empty?
       break if insns[0] == label
       report_skipped_insn(insns.shift)
     end

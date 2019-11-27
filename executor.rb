@@ -103,7 +103,7 @@ class Executor
         when :VM_SPECIAL_OBJECT_CBASE
           recv = current_frame._self
         else
-          raise 'unsupported'
+          raise VM::InternalError, 'unsupported'
         end
 
         recv.alias_method(new_method_name, existing_method_name)
@@ -194,7 +194,7 @@ class Executor
     when 3
       push(:VM_SPECIAL_OBJECT_CONST_BASE)
     else
-      raise 'dead'
+      raise VM::InternalError, 'dead'
     end
   end
 
