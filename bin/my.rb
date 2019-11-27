@@ -41,8 +41,8 @@ require '/Users/ilya/.rvm/scripts/irbrc.rb'
             return false # emulate original `require`
           elsif File.extname(resolved) == '.rb'
             $debug.puts "require #{resolved}"
-            RubyRb.require(resolved)
             $LOADED_FEATURES << resolved
+            RubyRb.require(resolved)
             return true
           else
             # .bundle or .so, we have to load it via ruby
@@ -102,8 +102,8 @@ require '/Users/ilya/.rvm/scripts/irbrc.rb'
           return false # emulate original `require_relative`
         else
           $debug.puts "require_relative #{resolved}"
-          RubyRb.require(resolved)
           $LOADED_FEATURES << resolved
+          RubyRb.require(resolved)
           return true
         end
       end
