@@ -135,16 +135,22 @@ class VM
   end
 
   def evaluate_last_iseq
-    size = @iseq_stack.size
+    initial_iseq_stack_size = @iseq_stack.size
+    initial_stack_size = @stack.size
 
     loop do
-      raise 'malformed iseq stack' if @iseq_stack.size < size
-      break if @iseq_stack.size == size && @iseq_stack.last.insns.empty?
+      raise 'malformed iseq stack' if @iseq_stack.size < initial_iseq_stack_size
+      break if @iseq_stack.size == initial_iseq_stack_size && @iseq_stack.last.insns.empty?
 
       if current_iseq.insns.empty?
         @iseq_stack.pop
         next
       end
+
+      unless @previous_frame.equal?(current_frame)
+        __log "  ====== switching to #{current_frame.pretty_name}  ========="
+      end
+      @previous_frame = current_frame
 
       current_insn = current_iseq.shift_insn
 
@@ -155,6 +161,10 @@ class VM
         current_iseq.insns.each { |insn| p insn }
         raise
       end
+
+      if @stack.size < initial_stack_size
+        raise 'initial stack is readonly, too many pops'
+      end
     end
   end
 
@@ -162,6 +172,22 @@ class VM
     $debug.print "-->" * @frame_stack.size
     $debug.print " "
     $debug.puts string
+  end
+
+  def pretty_insn(insn)
+    return insn unless insn.is_a?(Array)
+
+    name, *payload = insn
+    case name
+    when :defineclass
+      [name, payload[0], '...class body omitted']
+    when :putiseq
+      [name, payload[0][5], '...method body omitted']
+    when :send
+      [name, *payload[0..-2], '...block omitted']
+    else
+      insn
+    end
   end
 
   def clear_current_iseq
@@ -183,14 +209,7 @@ class VM
     when Array
       name, *payload = insn
 
-      case name
-      when :defineclass
-        __log [name, payload[0], '...omitted'].inspect
-      when :putiseq
-        __log [name, payload[0][5], '...omitted'].inspect
-      else
-        __log insn.inspect
-      end
+      __log pretty_insn(insn).inspect
 
       with_error_handling do
         @executor.send(:"execute_#{name}", payload)
@@ -212,7 +231,7 @@ class VM
   end
 
   def report_skipped_insn(insn)
-    __log "... #{insn.inspect}"
+    __log "... #{pretty_insn(insn).inspect}"
   end
 
   def current_iseq; @iseq_stack.last; end

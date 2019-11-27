@@ -33,7 +33,7 @@ RSpec.describe 'VM' do
 
   def evalate_using_mri(code)
     real_stdout, $stdout = $stdout, StringIO.new
-    eval(code)
+    TOPLEVEL_BINDING.eval(code)
     $stdout.rewind
     $stdout.read
   ensure
@@ -109,9 +109,9 @@ RSpec.describe 'VM' do
   end
 
   it 'handles Set' do
-    assert_evaluates_like_mri(<<-RUBY)
+    assert_evaluates_like_mri(<<-'RUBY')
       %i[Set SortedSet].each { |const_name| Object.send(:remove_const, const_name) }
-      $LOADED_FEATURES.reject! { |f| f =~ Regexp.new(Regexp.escape("/set.rb")) }
+      $LOADED_FEATURES.reject! { |f| f =~ /\/set\.rb/ }
       require 'set'
       set = Set[1, 2, 3]
       p set
@@ -177,6 +177,24 @@ RSpec.describe 'VM' do
       end
 
       p m
+    RUBY
+  end
+
+  it 'can return values of C methods' do
+    assert_evaluates_like_mri(<<-RUBY)
+      def m
+        self
+      end
+
+      p m
+    RUBY
+  end
+
+  it 'can return values to C methods' do
+    assert_evaluates_like_mri(<<-'RUBY')
+      o = Object.new
+      def o.to_s; "42"; end
+      puts "100 + #{o}"
     RUBY
   end
 end

@@ -239,7 +239,7 @@ class Executor
       end
     end
 
-    _raise NameError, "uninitialized constant #{name}"
+    vm._raise NameError, "uninitialized constant #{name}"
   end
 
   def execute_putiseq((iseq))
