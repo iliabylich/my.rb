@@ -52,7 +52,7 @@ class MethodArguments
       arg_name += 1 if arg_name.is_a?(Integer)
       arg_value = values.shift
       locals.find(name: arg_name).set(arg_value)
-      $debug.puts("req: #{arg_name} = #{arg_value}")
+      VM.instance.__log("req: #{arg_name} = #{arg_value}")
     end
 
     opt_info.each do |label|
@@ -60,7 +60,7 @@ class MethodArguments
       next if values.none? || values.length < post_num
       arg_value = values.shift
       locals.find(name: arg_name).set(arg_value)
-      $debug.puts("opt: #{arg_name} = #{arg_value}")
+      VM.instance.__log("opt: #{arg_name} = #{arg_value}")
       VM.instance.jump(label)
     end
 
@@ -68,7 +68,7 @@ class MethodArguments
       arg_name = arg_names.shift
       arg_value = values[0..-(post_num + 1)]
       locals.find(name: arg_name).set(arg_value)
-      $debug.puts("rest: #{arg_name} = #{arg_value.inspect}")
+      VM.instance.__log("rest: #{arg_name} = #{arg_value.inspect}")
 
       @values = values[post_num..-1]
     end
@@ -78,7 +78,7 @@ class MethodArguments
       arg_name += 1 if arg_name.is_a?(Integer)
       arg_value = values.shift
       locals.find(name: arg_name).set(arg_value)
-      $debug.puts("post: #{arg_name} = #{arg_value}")
+      VM.instance.__log("post: #{arg_name} = #{arg_value}")
     end
 
     kwdata.each do |kwarg|
@@ -93,12 +93,12 @@ class MethodArguments
         if kwvalues.key?(arg_name)
           # value given
           arg_value = kwvalues.delete(arg_name)
-          $debug.puts("kwopt: #{arg_name} = #{arg_value}")
+          VM.instance.__log("kwopt: #{arg_name} = #{arg_value}")
           local.set(arg_value)
         elsif kwarg.length == 2
           # inline default value
           arg_value = kwarg[1]
-          $debug.puts("kwopt: #{arg_name} = #{arg_value}")
+          VM.instance.__log("kwopt: #{arg_name} = #{arg_value}")
           local.set(arg_value)
         else
           # there must be some insns to fill it
@@ -111,7 +111,7 @@ class MethodArguments
         if kwvalues.key?(arg_name)
           arg_value = kwvalues.delete(arg_name)
           locals.find(name: arg_name).set(arg_value)
-          $debug.puts("kwreq: #{arg_name} = #{arg_value}")
+          VM.instance.__log("kwreq: #{arg_name} = #{arg_value}")
         else
           raise "missing kwarg #{arg_name.inspect}"
         end
@@ -126,13 +126,13 @@ class MethodArguments
         arg_name = arg_names.shift
         arg_name += 1 if arg_name.is_a?(Integer)
         locals.find(name: arg_name).set(arg_value)
-        $debug.puts("kwrest(internal #{arg_names}): #{arg_value.inspect}")
+        VM.instance.__log("kwrest(internal #{arg_names}): #{arg_value.inspect}")
       end
 
       arg_name = arg_names.shift
       locals.find(name: arg_name).set(arg_value)
 
-      $debug.puts("kwreq: #{arg_name} = #{arg_value.inspect}")
+      VM.instance.__log("kwreq: #{arg_name} = #{arg_value.inspect}")
     end
   end
 end

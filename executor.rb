@@ -145,7 +145,6 @@ class Executor
       end
     end
 
-
     args = options[:orig_argc].times.map { pop }.reverse
     if kwarg_names
       args << kwargs

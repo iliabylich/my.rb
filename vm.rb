@@ -4,6 +4,9 @@ require_relative './vm/iseq'
 
 class VM
   attr_reader :stack
+  attr_accessor :debug_focus_on
+  attr_accessor :debug_show_stack
+  attr_accessor :debug_print_rest_on_error
 
   class LocalJumpError < ::LocalJumpError
     def initialize(value)
@@ -157,8 +160,10 @@ class VM
       begin
         execute_insn(current_insn)
       rescue
-        $debug.puts "--------------\nRest (for #{current_frame.pretty_name} in #{current_frame.file}):"
-        current_iseq.insns.each { |insn| p insn }
+        if debug_print_rest_on_error
+          $debug.puts "--------------\nRest (for #{current_frame.pretty_name} in #{current_frame.file}):"
+          current_iseq.insns.each { |insn| p insn }
+        end
         raise
       end
 
@@ -168,7 +173,17 @@ class VM
     end
   end
 
+  def focused?
+    !debug_focus_on.nil? && current_frame.pretty_name.include?(debug_focus_on)
+  end
+
   def __log(string)
+    return unless focused?
+
+    if debug_show_stack
+      $debug.puts "Stack: #{@stack.inspect}"
+    end
+
     $debug.print "-->" * @frame_stack.size
     $debug.print " "
     $debug.puts string
@@ -196,6 +211,10 @@ class VM
   end
 
   def execute_insn(insn)
+    if @frame_stack.size != @iseq_stack.size
+      raise 'frame_stack and iseq_stack are inconsisten'
+    end
+
     case insn
     when Integer
       @last_numeric_insn = insn

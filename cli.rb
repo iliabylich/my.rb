@@ -2,7 +2,17 @@ require 'optparse'
 
 class CLI
   def parse_argv
-    options = { require: [], load_path: [], eval: nil, pre: nil, debug: false }
+    options = {
+      require: [],
+      load_path: [],
+      eval: nil,
+      pre: nil,
+      debug: false,
+      debug_focus_on: nil,
+      debug_show_stack: false,
+      debug_print_rest_on_error: false
+    }
+
     OptionParser.new do |opts|
       opts.banner = 'Usage: run.rb [options]'
 
@@ -33,6 +43,18 @@ class CLI
 
       opts.on('--debug', 'Run in debug mode') do
         options[:debug] = true
+      end
+
+      opts.on('--debug-focus-on=FRAME', 'Focus on some specific frame') do |debug_focus_on|
+        options[:debug_focus_on] = debug_focus_on
+      end
+
+      opts.on('--debug-show-stack') do
+        options[:debug_show_stack] = true
+      end
+
+      opts.on('--debug-print-rest-on-error') do
+        options[:debug_print_rest_on_error] = true
       end
     end.parse!
 
@@ -67,6 +89,10 @@ class CLI
     else
       $debug = StringIO.new
     end
+
+    VM.instance.debug_focus_on = options[:debug_focus_on]
+    VM.instance.debug_show_stack = options[:debug_show_stack]
+    VM.instance.debug_print_rest_on_error = options[:debug_print_rest_on_error]
 
     options[:load_path].each { |path| $LOAD_PATH << path }
     if (pre = options[:pre])
