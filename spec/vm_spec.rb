@@ -71,11 +71,33 @@ RSpec.describe 'VM' do
   end
 
   it 'handles if branching' do
-    assert_evaluates_like_mri('a = true; p(a ? 1 : 2)')
+    assert_evaluates_like_mri(<<-RUBY)
+      a = true
+      if a
+        p 1
+      else
+        p 2
+      end
+
+      if a
+        p 3
+      end
+    RUBY
   end
 
   it 'handles unless branching' do
-    assert_evaluates_like_mri('a = false; p(a ? 1 : 2)')
+    assert_evaluates_like_mri(<<-RUBY)
+      a = false
+      unless a
+        p 1
+      else
+        p 2
+      end
+
+      unless a
+        p 3
+      end
+    RUBY
   end
 
   it 'handles classes' do
