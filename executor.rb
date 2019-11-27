@@ -328,7 +328,7 @@ class Executor
     elsif (flag & 0x02).nonzero?
       # postarg
 
-      if size < array.size
+      if size > array.size
         (size - array.size).times { values_to_push.push(nil) }
       end
 
@@ -340,11 +340,11 @@ class Executor
 
       values_to_push.each { |item| push(item) }
     else
-      if size < array.size
+      [size, array.size].min.times { values_to_push.push(array.shift) }
+
+      if size > array.size
         (size - array.size).times { values_to_push.push(nil) }
       end
-
-      [size, array.size].min.times { values_to_push.push(array.shift) }
 
       if splat.nonzero?
         values_to_push.push(array)

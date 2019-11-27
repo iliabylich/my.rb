@@ -219,4 +219,13 @@ RSpec.describe 'VM' do
       puts "100 + #{o}"
     RUBY
   end
+
+  it 'handles masgn' do
+    assert_evaluates_like_mri(<<-RUBY)
+      a, *b, c = 1, 2, 3
+      d, *e, f = 4, 5
+      g, h, *i, j, k = 1
+      p [a,b,c,d,e,f,g,h,i,j,k]
+    RUBY
+  end
 end
