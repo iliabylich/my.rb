@@ -259,4 +259,17 @@ RSpec.describe 'VM' do
       p x
     RUBY
   end
+
+  it 'can yield through multiple frames' do
+    assert_evaluates_like_mri(<<-RUBY)
+      def m
+        tap do
+          yield 10
+          yield 20
+        end
+      end
+
+      m { |value| p value }
+    RUBY
+  end
 end

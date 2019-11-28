@@ -742,7 +742,11 @@ class Executor
 
   def execute_invokeblock((options))
     args = options[:orig_argc].times.map { pop }.reverse
-    result = current_frame.block.call(*args)
+
+    frame = current_frame
+    frame = frame.parent_frame until frame.can_yield?
+
+    result = frame.block.call(*args)
     push(result)
   end
 

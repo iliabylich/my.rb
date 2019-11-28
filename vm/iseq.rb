@@ -50,4 +50,8 @@ class ISeq
   def args_info
     @ruby_iseq[11]
   end
+
+  def pretty
+    "#{kind} #{name} at #{file}:#{line}"
+  end
 end

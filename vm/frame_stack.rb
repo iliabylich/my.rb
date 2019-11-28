@@ -1,4 +1,6 @@
 class FrameStack
+  attr_reader :stack
+
   include Enumerable
 
   def initialize

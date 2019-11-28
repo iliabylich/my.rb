@@ -33,4 +33,8 @@ MethodFrame = FrameClass.new do
   def can_return?
     true
   end
+
+  def can_yield?
+    true
+  end
 end

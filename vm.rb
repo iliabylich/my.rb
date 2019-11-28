@@ -4,6 +4,8 @@ require_relative './vm/iseq'
 
 class VM
   attr_reader :stack
+  attr_reader :frame_stack
+  attr_reader :iseq_stack
   attr_accessor :debug_focus_on
   attr_accessor :debug_show_stack
   attr_accessor :debug_print_rest_on_error
@@ -31,22 +33,22 @@ class VM
     @iseq_stack = []
     # @frame_stack.singleton_class.prepend(Module.new {
     #   def push(v)
-    #     puts "frame.push"
     #     super(v)
+    #     puts "frame.push [#{size}] #{stack.last(3).map(&:pretty_name).join(' -> ')}"
     #   end
     #   def pop
-    #     puts "frame.pop"
     #     super()
+    #     puts "frame.pop  [#{size}] #{stack.last(3).map(&:pretty_name).join(' -> ')}"
     #   end
     # })
     # @iseq_stack.singleton_class.prepend(Module.new {
     #   def push(v)
-    #     puts "iseq.push"
     #     super(v)
+    #     puts "iseq.push [#{size}] #{last(3).map(&:pretty).join(' -> ')}"
     #   end
     #   def pop
-    #     puts "iseq.pop"
     #     super()
+    #     puts "iseq.pop  [#{size}] #{last(3).map(&:pretty).join(' -> ')}"
     #   end
     # })
     @executor = Executor.new
@@ -75,6 +77,9 @@ class VM
   end
 
   def push_iseq(iseq)
+    if @frame_stack.size != @iseq_stack.size
+      raise InternalError, 'frame_stack and iseq_stack are inconsisten'
+    end
     @iseq_stack.push(iseq)
   end
   def pop_iseq
