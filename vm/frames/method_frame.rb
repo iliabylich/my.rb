@@ -27,7 +27,8 @@ MethodFrame = FrameClass.new do
   end
 
   def pretty_name
-    "#{_self.class}##{name}"
+    klass = BasicObject === _self ? 'BasicObject' : _self.class
+    "#{klass}##{name}"
   end
 
   def can_return?

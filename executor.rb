@@ -116,7 +116,7 @@ class Executor
           args = [*head, *tail]
         end
 
-        recv.send(mid, *args)
+        recv.__send__(mid, *args)
       end
 
     push(result)
@@ -157,7 +157,7 @@ class Executor
       args = [*head, *tail]
     end
 
-    result = recv.send(mid, *args, &block)
+    result = recv.__send__(mid, *args, &block)
 
     push(result)
   end
@@ -167,11 +167,11 @@ class Executor
     define_on = DefinitionScope.new(current_frame)
 
     define_on.define_method(method_name) do |*method_args, &block|
-      VM.instance.execute(body_iseq, _self: self, method_args: method_args, block: block, parent_nesting: parent_nesting)
+      ::VM.instance.execute(body_iseq, _self: self, method_args: method_args, block: block, parent_nesting: parent_nesting)
     end
 
     if current_frame.in_module_function_section
-      current_frame._self.send(:module_function, method_name)
+      current_frame._self.__send__(:module_function, method_name)
     end
 
     method_name
@@ -459,31 +459,31 @@ class Executor
   def execute_opt_aref((options, _flag))
     args = options[:orig_argc].times.map { pop }.reverse
     recv = pop
-    push(recv.send(:[], *args))
+    push(recv.__send__(:[], *args))
   end
 
   def execute_opt_aset((options, _flag))
     args = options[:orig_argc].times.map { pop }.reverse
     recv = pop
-    push(recv.send(:[]=, *args))
+    push(recv.__send__(:[]=, *args))
   end
 
   def execute_opt_mult((options, _flag))
     args = options[:orig_argc].times.map { pop }.reverse
     recv = pop
-    push(recv.send(:*, *args))
+    push(recv.__send__(:*, *args))
   end
 
   def execute_opt_length((options, _flag))
     args = options[:orig_argc].times.map { pop }.reverse
     recv = pop
-    push(recv.send(:length, *args))
+    push(recv.__send__(:length, *args))
   end
 
   def execute_opt_eq((options, _flag))
     args = options[:orig_argc].times.map { pop }.reverse
     recv = pop
-    push(recv.send(:==, *args))
+    push(recv.__send__(:==, *args))
   end
 
   def execute_opt_ltlt((options, _flag))
@@ -505,14 +505,18 @@ class Executor
     scope.const_set(name, value)
   end
 
+  GET_IVAR = Object.instance_method(:instance_variable_get)
+
   def execute_getinstancevariable((name, _flag))
-    value = current_frame._self.instance_variable_get(name)
+    value = GET_IVAR.bind(current_frame._self).call(name)
     push(value)
   end
 
+  SET_IVAR = Object.instance_method(:instance_variable_set)
+
   def execute_setinstancevariable((name, _flag))
     value = pop
-    current_frame._self.instance_variable_set(name, value)
+    SET_IVAR.bind(current_frame._self).call(name, value)
   end
 
   def execute_getblockparam(args)

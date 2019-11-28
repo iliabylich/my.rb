@@ -70,8 +70,18 @@ class VM
     evaluate_last_iseq
     __log "\n\n--------- END   #{current_frame.header} ---------"
 
-    result = pop_frame
-    pop_iseq
+    begin
+      was = @frame_stack.size
+      result = pop_frame
+    ensure
+      popped = @frame_stack.size + 1 == was
+
+      if popped
+        pop_iseq
+      else
+        raise InternalError, 'pop_frame had no effect, dont know what to do'
+      end
+    end
 
     result
   end
@@ -151,6 +161,8 @@ class VM
   end
 
   def pop_frame
+    expected_size = @frame_stack.size - 1
+
     error_to_reraise = nil
 
     if (error = current_frame.current_error)
@@ -167,7 +179,7 @@ class VM
 
     current_frame.returning
   ensure
-    @frame_stack.pop
+    @frame_stack.pop while @frame_stack.size > expected_size
 
     raise error_to_reraise if error_to_reraise
   end
