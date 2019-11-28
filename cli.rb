@@ -58,7 +58,7 @@ class CLI
       end
     end.parse!
 
-    options[:files_to_run] = ARGV
+    options[:file_to_run] = ARGV.shift
 
     if options[:print_missing_insns]
       all = RubyVM::INSTRUCTION_NAMES.map { |insn| :"execute_#{insn}" }.grep_v(/execute_trace_/)
@@ -70,11 +70,11 @@ class CLI
       exit(0)
     end
 
-    if options[:eval] && options[:files_to_run].any?
+    if options[:eval] && options[:file_to_run]
       raise "-e and [file].rb are mutually exclusive"
     end
 
-    if options[:eval].nil? && options[:files_to_run].empty?
+    if options[:eval].nil? && options[:file_to_run].nil?
       raise "at least one of -e or [file].rb must be given"
     end
 
@@ -100,8 +100,12 @@ class CLI
     end
     options[:require].each { |path| require[path] }
     if (code = options[:eval])
+      $0 = '-e'
       eval[code]
     end
-    options[:files_to_run].each { |path| $0 = path; require[path] }
+    if (file_to_run = options[:file_to_run])
+      $0 = file_to_run
+      require[file_to_run]
+    end
   end
 end

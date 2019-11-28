@@ -7,7 +7,6 @@ require_relative '../vm'
 class RubyRb
   def self.require(file)
     iseq = RubyVM::InstructionSequence.compile_file(file)
-    $0 = file
     run_instruction(iseq)
   end
 
