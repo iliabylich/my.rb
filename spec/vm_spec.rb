@@ -272,4 +272,14 @@ RSpec.describe 'VM' do
       m { |value| p value }
     RUBY
   end
+
+  it 'supports instance_eval' do
+    assert_evaluates_like_mri(<<-RUBY)
+      1.instance_eval { p self }
+      Kernel.class_eval { p self }
+      block = proc { p self }
+      1.instance_eval(&block)
+      Kernel.class_eval(&block)
+    RUBY
+  end
 end

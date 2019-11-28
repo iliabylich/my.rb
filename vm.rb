@@ -66,6 +66,8 @@ class VM
     push_iseq(iseq)
     push_frame_for_iseq(iseq, **payload)
 
+    if (before_eval = payload[:before_eval]); before_eval.call; end
+
     __log "\n\n--------- BEGIN #{current_frame.header} ---------"
     evaluate_last_iseq
     __log "\n\n--------- END   #{current_frame.header} ---------"
@@ -142,7 +144,7 @@ class VM
       @frame_stack.push_block(
         iseq: iseq,
         parent_frame: payload[:parent_frame],
-        block_args: payload[:block_args]
+        block_args: payload[:block_args],
       )
     when :rescue
       @frame_stack.push_rescue(

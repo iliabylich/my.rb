@@ -124,6 +124,7 @@ class Executor
 
   # always has a block, otherwise goes to opt_send_without_block
   def execute_send((options, _flag, block_iseq))
+    _self = self
     mid = options[:mid]
 
     args = []
@@ -132,9 +133,21 @@ class Executor
     block =
       if block_iseq
         original_block_frame = self.current_frame
-        proc { |*args| VM.instance.execute(block_iseq, block_args: args, parent_frame: original_block_frame) }
+        proc do |*args|
+          VM.instance.execute(
+            block_iseq,
+              block_args: args,
+              parent_frame: original_block_frame,
+              before_eval: proc {
+                if _self != self
+                  # self switch, we should follow it
+                  VM.instance.current_frame._self = self
+                end
+              }
+          )
+        end
       elsif (implicit_block = pop)
-        implicit_block.to_proc
+        implicit_block
       else
         nil
       end

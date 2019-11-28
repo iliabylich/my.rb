@@ -119,7 +119,6 @@ require '/Users/ilya/.rvm/scripts/irbrc.rb'
   end
 end
 
-
 cli = CLI.new
 
 cli.run(
