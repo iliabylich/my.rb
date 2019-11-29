@@ -62,7 +62,7 @@ class CLI
 
     if options[:print_missing_insns]
       all = RubyVM::INSTRUCTION_NAMES.map { |insn| :"execute_#{insn}" }.grep_v(/execute_trace_/)
-      existing = Evaluator.instance_methods
+      existing = Executor.instance_methods
       existing &= all
       missing = all - existing
       puts "+#{existing.length} / -#{missing.length} / total: #{all.length}"
