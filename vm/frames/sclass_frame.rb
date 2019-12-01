@@ -1,10 +1,16 @@
 SClassFrame = FrameClass.new do
   def initialize(parent_frame:, of:)
-    sclass = of.singleton_class
+    @parent_frame = parent_frame
+    @of = of
+
+    self.locals = Locals.new
+  end
+
+  def prepare
+    sclass = @of.singleton_class
 
     self._self = sclass
-    self.nesting = [*parent_frame.nesting, sclass]
-    self.locals = Locals.new
+    self.nesting = [*@parent_frame.nesting, sclass]
   end
 
   def pretty_name

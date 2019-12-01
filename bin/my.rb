@@ -121,6 +121,13 @@ end
 
 cli = CLI.new
 
+if ENV['DISABLE_BREAKPOINTS']
+  class Binding
+    def irb
+    end
+  end
+end
+
 cli.run(
   eval: ->(code) { RubyRb.eval(code) },
   require: ->(file) { RubyRb.require(file) }

@@ -3,6 +3,8 @@ BlockFrame = FrameClass.new do
 
   attr_accessor :block
 
+  attr_reader :block_args
+
   def initialize(parent_frame:, block_args:)
     self._self = parent_frame._self
     self.nesting = parent_frame.nesting
@@ -14,11 +16,17 @@ BlockFrame = FrameClass.new do
       block_args = block_args[0]
     end
 
-    @kwoptarg_ids, @labels_to_skip, @block = MethodArguments.new(
+    @block_args = block_args
+  end
+
+  def prepare
+    MethodArguments.new(
       iseq: iseq,
       values: block_args,
       locals: locals
     ).extract
+
+    @kwoptarg_ids = (iseq.args_info[:keyword] || []).grep(Array).map { |name,| locals.find(name: name).id }
   end
 
   def pretty_name

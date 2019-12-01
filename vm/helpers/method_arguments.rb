@@ -70,7 +70,7 @@ class MethodArguments
       locals.find(name: arg_name).set(arg_value)
       VM.instance.__log("rest: #{arg_name} = #{arg_value.inspect}")
 
-      @values = values[post_num..-1]
+      @values = values[post_num..-1] || []
     end
 
     post_num.times do

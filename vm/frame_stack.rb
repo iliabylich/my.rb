@@ -16,7 +16,7 @@ class FrameStack
   def push(frame)
     @stack << frame
     frame.prepare
-    if @stack.size > 1000
+    if @stack.size > 100
       raise VM::InternalError, 'stack overflow'
     end
   end

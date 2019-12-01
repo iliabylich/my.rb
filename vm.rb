@@ -15,7 +15,12 @@ class VM
     attr_reader :value
   end
 
-  class InternalError < ::RuntimeError; end
+  class InternalError < ::RuntimeError
+    def initialize(*)
+      super
+      set_backtrace(VM.instance.backtrace)
+    end
+  end
 
   def initialize
     @frame_stack = FrameStack.new
@@ -58,6 +63,7 @@ class VM
     end
 
     if @frame_stack.size != depth_before
+      @frame_stack.pop while @frame_stack.size > depth_before
       raise InternalError, 'frame stack is inconsistent'
     end
 
@@ -126,6 +132,11 @@ class VM
   end
 
   def pop_frame
+    if @frame_stack.size == 0
+      expected_size = 1000
+      raise InternalError, 'no frame to pop'
+    end
+
     expected_size = @frame_stack.size - 1
 
     error_to_reraise = nil
@@ -144,7 +155,9 @@ class VM
 
     current_frame.returning
   ensure
-    @frame_stack.pop while @frame_stack.size > expected_size
+    while @frame_stack.size > expected_size
+      @frame_stack.pop
+    end
 
     raise error_to_reraise if error_to_reraise
   end

@@ -1,13 +1,9 @@
-task :rubyspec do
-  code = Dir['../rubyspec/language/**/*_spec.rb']
-          .map { |spec| "require_relative '#{spec}'" }
-          .join("\n")
+namespace :rubyspec do
+  task :run_and_record_failures do
+    sh 'DISABLE_BREAKPOINTS=1 ../mspec/bin/mspec tag -t bin/my.rb ../rubyspec/language/'
+  end
 
-  File.write('tests.rb', "#{code}\n")
-
-  sh 'cat tests.rb'
-
-  sh '../mspec/bin/mspec -t bin/my.rb tests.rb'
-ensure
-  sh 'rm tests.rb'
+  task :run_passing do
+    sh 'DISABLE_BREAKPOINTS=1 ../mspec/bin/mspec -t bin/my.rb ../rubyspec/language/ -- --excl-tag=fails'
+  end
 end
