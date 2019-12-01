@@ -9,7 +9,7 @@ class CLI
       pre: nil,
       debug: false,
       debug_focus_on: nil,
-      debug_show_stack: false,
+      debug_print_stack: false,
       debug_print_rest_on_error: false
     }
 
@@ -49,8 +49,8 @@ class CLI
         options[:debug_focus_on] = debug_focus_on
       end
 
-      opts.on('--debug-show-stack') do
-        options[:debug_show_stack] = true
+      opts.on('--debug-print-stack') do
+        options[:debug_print_stack] = true
       end
 
       opts.on('--debug-print-rest-on-error') do
@@ -91,7 +91,7 @@ class CLI
     end
 
     VM.instance.debug_focus_on = options[:debug_focus_on]
-    VM.instance.debug_show_stack = options[:debug_show_stack]
+    VM.instance.debug_print_stack = options[:debug_print_stack]
     VM.instance.debug_print_rest_on_error = options[:debug_print_rest_on_error]
 
     options[:load_path].each { |path| $LOAD_PATH << path }

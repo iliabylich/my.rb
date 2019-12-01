@@ -5,7 +5,7 @@ require_relative './vm/iseq'
 class VM
   attr_reader :frame_stack
   attr_accessor :debug_focus_on
-  attr_accessor :debug_show_stack
+  attr_accessor :debug_print_stack
   attr_accessor :debug_print_rest_on_error
 
   class LocalJumpError < ::LocalJumpError
@@ -192,7 +192,7 @@ class VM
   def __log(string)
     return if debug_focus_on && !focused?
 
-    if debug_show_stack
+    if debug_print_stack
       $debug.puts "Stack: #{current_frame.stack.inspect}"
     end
 

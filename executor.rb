@@ -413,7 +413,7 @@ class Executor
 
   def execute_checktype((type))
     item_to_check = pop
-    check = RB_OBJ_TYPES.fetch(type) { raise "checktype - unknown type #{type}" }
+    check = RB_OBJ_TYPES.fetch(type) { raise VM::InternalError, "checktype - unknown type #{type}" }
     result = check.call(item_to_check)
     push(result)
   end

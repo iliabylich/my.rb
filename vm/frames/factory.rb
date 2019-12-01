@@ -25,7 +25,7 @@ class FrameClass
       attr_accessor :returning
 
       def pretty_name
-        raise NotImplementedError, "#{self.class}#pretty_name is missing"
+        raise VM::InternalError, "#{self.class}#pretty_name is missing"
       end
 
       def can_return?;  false; end

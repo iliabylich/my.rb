@@ -23,7 +23,7 @@ class Stack
 
   def pop
     if @stack.empty?
-      raise 'stack is empty, cannot do pop'
+      raise VM::InternalError, 'stack is empty, cannot do pop'
     end
 
     @stack.pop
@@ -39,5 +39,9 @@ class Stack
 
   def disable_push!
     @push_disabled = true
+  end
+
+  def inspect
+    "#{@stack.inspect}" + (@push_disabled ? ' (push disabled)' : '')
   end
 end

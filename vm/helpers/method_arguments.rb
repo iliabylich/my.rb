@@ -41,7 +41,7 @@ class MethodArguments
         # consume
         kwvalues = values.pop
       elsif kwdata.any? { |kw| kw.is_a?(Symbol) }
-        raise "expected kwargs"
+        raise ArgumentError, "expected kwargs"
       else
         kwvalues = {}
       end
@@ -113,7 +113,7 @@ class MethodArguments
           locals.find(name: arg_name).set(arg_value)
           VM.instance.__log("kwreq: #{arg_name} = #{arg_value}")
         else
-          raise "missing kwarg #{arg_name.inspect}"
+          raise ArgumentError, "missing kwarg #{arg_name.inspect}"
         end
       end
     end

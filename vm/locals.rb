@@ -39,7 +39,7 @@ class Locals
         raise NotImplementedError, "At least one of name:/id: is required"
       end
 
-    raise "No local name=#{name.inspect}/id=#{id.inspect}" if result.nil?
+    raise VM::InternalError, "No local name=#{name.inspect}/id=#{id.inspect}" if result.nil?
 
     result
   end
