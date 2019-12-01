@@ -256,7 +256,7 @@ class VM
 
   def with_error_handling
     yield
-  rescue => e
+  rescue Exception => e
     if e.is_a?(InternalError)
       # our error, just re-raise ie
       raise
