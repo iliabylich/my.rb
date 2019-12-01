@@ -14,7 +14,8 @@ class FrameClass
       *arguments,
       keyword_init: true
     ) do
-      attr_reader :_iseq
+      attr_reader :iseq
+      attr_reader :stack
 
       attr_reader :labels_to_skip
       attr_reader :in_module_function_section
@@ -22,7 +23,6 @@ class FrameClass
       attr_accessor :current_error
 
       attr_accessor :returning
-      attr_accessor :exiting
 
       def pretty_name
         raise NotImplementedError, "#{self.class}#pretty_name is missing"
@@ -40,7 +40,8 @@ class FrameClass
         instance = allocate
 
         instance.instance_eval {
-          @_iseq = iseq
+          @iseq = iseq
+          @stack = Stack.new
           @labels_to_skip = []
           @in_module_function_section = false
         }
@@ -50,7 +51,6 @@ class FrameClass
         instance.name = iseq.name
 
         instance.returning = :UNDEFINED
-        instance.exiting   = false
 
         instance.send(:initialize, **attributes)
 
@@ -69,14 +69,15 @@ class FrameClass
         @returning != :UNDEFINED
       end
 
-      def exit!
-        _iseq.insns.clear
-        _iseq.insns.push([:leave])
-        @exiting = true
-      end
+      def exit!(value)
+        VM.instance.__log "... scheduling force [:leave] (on #{self.name} with #{value.inspect})"
 
-      def exiting?
-        @exiting
+        iseq.insns.clear
+        iseq.insns.push([:leave])
+
+        stack.clear
+        stack.push(value)
+        stack.disable_push!
       end
     end
   end

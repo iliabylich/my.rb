@@ -10,12 +10,12 @@ BlockFrame = FrameClass.new do
 
     @parent_frame = parent_frame
 
-    if block_args.is_a?(Array) && block_args.length == 1 && block_args[0].is_a?(Array) && !_iseq.args_info[:ambiguous_param0]
+    if block_args.is_a?(Array) && block_args.length == 1 && block_args[0].is_a?(Array) && !iseq.args_info[:ambiguous_param0]
       block_args = block_args[0]
     end
 
     @kwoptarg_ids, @labels_to_skip, @block = MethodArguments.new(
-      iseq: _iseq,
+      iseq: iseq,
       values: block_args,
       locals: locals
     ).extract

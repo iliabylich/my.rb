@@ -1,9 +1,9 @@
 class Executor
   def vm; VM.instance; end
 
-  def stack; vm.stack; end
+  def stack; vm.current_stack; end
 
-  def push(object); stack.push(object) unless vm.current_frame.exiting?; end
+  def push(object); stack.push(object)  end
   def pop;          stack.pop;          end
   def reset_stack;  stack = [];         end
 
@@ -368,7 +368,7 @@ class Executor
   end
 
   def execute_dup(_)
-    value = stack.pop
+    value = pop
     push(value); push(value)
   end
 
@@ -412,7 +412,7 @@ class Executor
   }.freeze
 
   def execute_checktype((type))
-    item_to_check = stack.pop
+    item_to_check = pop
     check = RB_OBJ_TYPES.fetch(type) { raise "checktype - unknown type #{type}" }
     result = check.call(item_to_check)
     push(result)
@@ -552,7 +552,7 @@ class Executor
   end
 
   def execute_setn((n))
-    stack[-n-1] = stack.last
+    stack[-n-1] = stack.top
   end
 
   def execute_tostring(*)
@@ -567,7 +567,7 @@ class Executor
   end
 
   def execute_freezestring((_flag))
-    stack.last.freeze
+    stack.top.freeze
   end
 
   def execute_opt_neq(_)
@@ -577,7 +577,7 @@ class Executor
   end
 
   def execute_branchnil((label))
-    value = stack.last
+    value = stack.top
     if value.nil?
       VM.instance.jump(label)
     end
@@ -811,18 +811,14 @@ class Executor
       case state
       when 1
         # return
-        push(throw_obj)
-
         frame = current_frame
 
         until frame.can_return?
-          vm.__log "... scheduling force [:leave] (on #{frame.name})"
-          vm.stack.push(:__unused)
-          frame.exit!
+          frame.exit!(:__unused)
           frame = frame.parent_frame
         end
 
-        frame.exit!
+        frame.exit!(throw_obj)
       when 3
         # next inside rescue/ensure, inside pop_frame,
         # so current_frame is about to die
@@ -830,14 +826,12 @@ class Executor
         frame = current_frame
 
         until frame.can_do_next?
-          vm.__log "... scheduling force [:leave] (on #{frame.name})"
-          vm.stack.push(:__unused)
-          frame.exit!
+          frame.exit!(:__unused)
           frame = frame.parent_frame
         end
 
         frame.returning = throw_obj
-        frame.exit!
+        frame.exit!(throw_obj)
       else
         binding.irb
       end

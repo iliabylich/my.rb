@@ -3,9 +3,7 @@ require_relative './vm/frames'
 require_relative './vm/iseq'
 
 class VM
-  attr_reader :stack
   attr_reader :frame_stack
-  attr_reader :iseq_stack
   attr_accessor :debug_focus_on
   attr_accessor :debug_show_stack
   attr_accessor :debug_print_rest_on_error
@@ -20,17 +18,7 @@ class VM
   class InternalError < ::RuntimeError; end
 
   def initialize
-    @stack = []
-    @stack.singleton_class.prepend(Module.new {
-      def pop
-        if length == 0
-          raise InternalError, 'stack is empty, there is nothing to pop'
-        end
-        super
-      end
-    })
     @frame_stack = FrameStack.new
-    @iseq_stack = []
     # @frame_stack.singleton_class.prepend(Module.new {
     #   def push(v)
     #     super(v)
@@ -39,16 +27,6 @@ class VM
     #   def pop
     #     super()
     #     puts "frame.pop  [#{size}] #{stack.last(3).map(&:pretty_name).join(' -> ')}"
-    #   end
-    # })
-    # @iseq_stack.singleton_class.prepend(Module.new {
-    #   def push(v)
-    #     super(v)
-    #     puts "iseq.push [#{size}] #{last(3).map(&:pretty).join(' -> ')}"
-    #   end
-    #   def pop
-    #     super()
-    #     puts "iseq.pop  [#{size}] #{last(3).map(&:pretty).join(' -> ')}"
     #   end
     # })
     @executor = Executor.new
@@ -63,45 +41,30 @@ class VM
   def execute(iseq, **payload)
     iseq = ISeq.new(iseq)
 
-    push_iseq(iseq)
-    push_frame_for_iseq(iseq, **payload)
+    depth_before = frame_stack.size
+
+    push_frame(iseq, **payload)
 
     if (before_eval = payload[:before_eval]); before_eval.call; end
 
     __log "\n\n--------- BEGIN #{current_frame.header} ---------"
-    evaluate_last_iseq
+    evaluate_last_frame
     __log "\n\n--------- END   #{current_frame.header} ---------"
+  ensure
+    result = pop_frame
 
-    begin
-      was = @frame_stack.size
-      result = pop_frame
-    ensure
-      popped = @frame_stack.size + 1 == was
-
-      if popped
-        pop_iseq
-      else
-        raise InternalError, 'pop_frame had no effect, dont know what to do'
-      end
+    if $! && !$!.is_a?(InternalError)
+      raise
     end
 
-    result
+    if @frame_stack.size != depth_before
+      raise InternalError, 'frame stack is inconsistent'
+    end
+
+    return result
   end
 
-  def push_iseq(iseq)
-    if @frame_stack.size != @iseq_stack.size
-      raise InternalError, 'frame_stack and iseq_stack are inconsisten'
-    end
-    @iseq_stack.push(iseq)
-  end
-  def pop_iseq
-    @iseq_stack.pop
-    if @frame_stack.size != @iseq_stack.size
-      raise InternalError, 'frame_stack and iseq_stack are inconsisten'
-    end
-  end
-
-  def push_frame_for_iseq(iseq, **payload)
+  def push_frame(iseq, **payload)
     case iseq.kind
     when :top
       @frame_stack.push_top(
@@ -168,13 +131,13 @@ class VM
     error_to_reraise = nil
 
     if (error = current_frame.current_error)
-      if (rescue_iseq = current_frame._iseq.handler(:rescue))
+      if (rescue_iseq = current_frame.iseq.handler(:rescue))
         execute(rescue_iseq, caught: error)
       else
         error_to_reraise = error
       end
 
-      if (ensure_iseq = current_frame._iseq.handler(:ensure))
+      if (ensure_iseq = current_frame.iseq.handler(:ensure))
         execute(ensure_iseq)
       end
     end
@@ -186,18 +149,21 @@ class VM
     raise error_to_reraise if error_to_reraise
   end
 
-  def evaluate_last_iseq
-    initial_iseq_stack_size = @iseq_stack.size
-    initial_stack_size = @stack.size
+  def evaluate_last_frame
+    initial_frame_stack_size = frame_stack.size
 
     loop do
-      raise InternalError, 'malformed iseq stack' if @iseq_stack.size < initial_iseq_stack_size
-      break if @iseq_stack.size == initial_iseq_stack_size && @iseq_stack.last.insns.empty?
+      raise InternalError, 'malformed frame stack' if frame_stack.size < initial_frame_stack_size
 
-      if current_iseq.insns.empty?
-        pop_frame
-        pop_iseq
-        next
+      if current_insns.empty?
+        if frame_stack.size == initial_frame_stack_size
+          # done with the root iseq
+          break
+        else
+          # done with intermediate iseq
+          pop_frame
+          next
+        end
       end
 
       unless @previous_frame.equal?(current_frame)
@@ -216,10 +182,6 @@ class VM
         end
         raise
       end
-
-      if @stack.size < initial_stack_size
-        raise InternalError, 'initial stack is readonly, too many pops'
-      end
     end
   end
 
@@ -231,7 +193,7 @@ class VM
     return if debug_focus_on && !focused?
 
     if debug_show_stack
-      $debug.puts "Stack: #{@stack.inspect}"
+      $debug.puts "Stack: #{current_frame.stack.inspect}"
     end
 
     $debug.print "-->" * @frame_stack.size
@@ -268,7 +230,7 @@ class VM
       current_frame.line = @last_numeric_insn
       @last_numeric_insn = nil
     when [:leave]
-      current_frame.returning = returning = @stack.pop
+      current_frame.returning = returning = current_stack.pop
       __log "#{insn.inspect} (returning #{returning.inspect})"
       clear_current_iseq
     when Array
@@ -309,9 +271,11 @@ class VM
     __log "... #{pretty_insn(insn).inspect}"
   end
 
-  def current_iseq; @iseq_stack.last; end
-  def current_frame; @frame_stack.top; end
+  def current_frame; frame_stack.top; end
   def current_self;  current_frame._self; end
+  def current_iseq; current_frame.iseq; end
+  def current_insns; current_iseq.insns; end
+  def current_stack; current_frame.stack; end
   def current_nesting; current_frame.nesting; end
   def backtrace; @frame_stack.to_backtrace; end
 

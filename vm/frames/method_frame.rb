@@ -18,12 +18,12 @@ MethodFrame = FrameClass.new do
 
   def prepare
     MethodArguments.new(
-      iseq: _iseq,
+      iseq: iseq,
       values: arg_values,
       locals: locals
     ).extract
 
-    @kwoptarg_ids = (_iseq.args_info[:keyword] || []).grep(Array).map { |name,| locals.find(name: name).id }
+    @kwoptarg_ids = (iseq.args_info[:keyword] || []).grep(Array).map { |name,| locals.find(name: name).id }
   end
 
   def pretty_name
