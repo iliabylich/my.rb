@@ -1,0 +1,7 @@
+fails:The undef keyword allows undefining multiple methods at a time
+fails:The undef keyword raises a NameError when passed a missing name
+fails:The undef keyword undefines a method with an identifier
+fails:The undef keyword undefines a method with a simple symbol
+fails:The undef keyword undefines a method with a single quoted symbol
+fails:The undef keyword undefines a method with a double quoted symbol
+fails:The undef keyword undefines a method with a interpolated symbol

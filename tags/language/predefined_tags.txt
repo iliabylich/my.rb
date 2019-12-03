@@ -1,0 +1,45 @@
+fails:Predefined global $~ is set to contain the MatchData object of the last match if successful
+fails:Predefined global $~ is set to nil if the last match was unsuccessful
+fails:Predefined global $~ is set at the method-scoped level rather than block-scoped
+fails:Predefined global $~ raises an error if assigned an object not nil or instanceof MatchData
+fails:Predefined global $~ changes the value of derived capture globals when assigned
+fails:Predefined global $~ changes the value of the derived preceding match global
+fails:Predefined global $~ changes the value of the derived following match global
+fails:Predefined global $~ changes the value of the derived full match global
+fails:Predefined global $& is equivalent to MatchData#[0] on the last match $~
+fails:Predefined global $& sets the encoding to the encoding of the source String
+fails:Predefined global $` is equivalent to MatchData#pre_match on the last match $~
+fails:Predefined global $` sets the encoding to the encoding of the source String
+fails:Predefined global $` sets an empty result to the encoding of the source String
+fails:Predefined global $' is equivalent to MatchData#post_match on the last match $~
+fails:Predefined global $' sets the encoding to the encoding of the source String
+fails:Predefined global $' sets an empty result to the encoding of the source String
+fails:Predefined global $+ is equivalent to $~.captures.last
+fails:Predefined global $+ captures the last non nil capture
+fails:Predefined global $+ sets the encoding to the encoding of the source String
+fails:Predefined globals $1..N are equivalent to $~[N]
+fails:Predefined globals $1..N are nil unless a match group occurs
+fails:Predefined globals $1..N sets the encoding to the encoding of the source String
+fails:Predefined global $! should be set to the value of $! before the begin after a successful rescue
+fails:Predefined global $! should be set to the value of $! before the begin after a rescue which returns
+fails:Predefined global $! should be set to the value of $! before the begin after a successful rescue within an ensure
+fails:Predefined global $! should be set to the new exception after a throwing rescue
+fails:Predefined global $! in bodies without ensure should be cleared when an exception is rescued
+fails:Predefined global $! in bodies without ensure should be cleared when an exception is rescued even when a non-local return is present
+fails:Predefined global $! in bodies without ensure should not be cleared when an exception is not rescued
+fails:Predefined global $! in bodies without ensure should not be cleared when an exception is rescued and rethrown
+fails:Predefined global $! in ensure-protected bodies should be cleared when an exception is rescued
+fails:Predefined global $! in ensure-protected bodies should not be cleared when an exception is not rescued
+fails:Predefined global $! in ensure-protected bodies should not be cleared when an exception is rescued and rethrown
+fails:Predefined global $. should call #to_int to convert the object to an Integer
+fails:Predefined global $. raises TypeError if object can't be converted to an Integer
+fails:Predefined global $_ is set to the last line read by e.g. StringIO#gets
+fails:Predefined global $_ is set at the method-scoped level rather than block-scoped
+fails:Predefined global $_ can be assigned any value
+fails:Execution variable $: is initialized to an array of strings
+fails:Global variable $0 is the path given as the main script and the same as __FILE__
+fails:The predefined global constant STDIN has the encodings set by #set_encoding
+fails:The predefined global constant STDIN retains the encoding set by #set_encoding when Encoding.default_external is changed
+fails:The predefined global constant STDOUT has the encodings set by #set_encoding
+fails:The predefined global constant STDERR has the encodings set by #set_encoding
+fails:The predefined global constant ARGV contains Strings encoded in locale Encoding

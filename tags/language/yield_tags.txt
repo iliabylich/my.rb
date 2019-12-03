@@ -1,0 +1,22 @@
+fails:The yield call taking no arguments raises a LocalJumpError when the method is not passed a block
+fails:The yield call taking no arguments ignores assignment to the explicit block argument and calls the passed block
+fails:The yield call taking no arguments does not pass a named block to the block being yielded to
+fails:The yield call taking a single argument when no block is given raises a LocalJumpError
+fails:The yield call taking a single argument yielding to a literal block passes an empty Array when the argument is an empty Array
+fails:The yield call taking a single argument yielding to a literal block passes a single, multi-value Array
+fails:The yield call taking a single argument yielding to a lambda passes an empty Array when the argument is an empty Array
+fails:The yield call taking a single argument yielding to a lambda passes a single, multi-value Array
+fails:The yield call taking a single argument yielding to a lambda raises an ArgumentError if too few arguments are passed
+fails:The yield call taking a single argument yielding to a lambda should not destructure an Array into multiple arguments
+fails:The yield call taking multiple arguments raises a LocalJumpError when the method is not passed a block
+fails:The yield call taking multiple arguments raises an ArgumentError if too many arguments are passed to a lambda
+fails:The yield call taking multiple arguments raises an ArgumentError if too few arguments are passed to a lambda
+fails:The yield call taking a single splatted argument raises a LocalJumpError when the method is not passed a block
+fails:The yield call taking a single splatted argument passes a single value
+fails:The yield call taking multiple arguments with a splat raises a LocalJumpError when the method is not passed a block
+fails:The yield call taking multiple arguments with a splat passes the arguments to the block
+fails:The yield call taking multiple arguments with a splat does not pass an argument value if the splatted argument is an empty Array
+fails:The yield call taking multiple arguments with a splat passes the Array elements as arguments if the splatted argument is a non-empty Array
+fails:The yield call taking multiple arguments with a splat does not pass an argument value if the splatted argument is nil
+fails:The yield call taking matching arguments with splats and post args raises a LocalJumpError when the method is not passed a block
+fails:The yield call taking matching arguments with splats and post args passes the arguments to the block

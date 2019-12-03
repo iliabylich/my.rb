@@ -1,0 +1,10 @@
+fails:The module keyword creates a new module without semicolon
+fails:The module keyword creates a new module with a non-qualified constant name
+fails:The module keyword creates a new module with a qualified constant name
+fails:The module keyword creates a new module with a variable qualified constant name
+fails:The module keyword raises a TypeError if the constant is a Class
+fails:The module keyword raises a TypeError if the constant is a String
+fails:The module keyword raises a TypeError if the constant is a Fixnum
+fails:The module keyword raises a TypeError if the constant is nil
+fails:The module keyword raises a TypeError if the constant is true
+fails:The module keyword raises a TypeError if the constant is false

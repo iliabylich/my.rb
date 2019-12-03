@@ -1,0 +1,3 @@
+fails:Safe navigator allows assignment methods
+fails:Safe navigator allows assignment operators
+fails:Safe navigator does not call the operator method lazily with an assignment operator

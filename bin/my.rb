@@ -60,13 +60,13 @@ require '/Users/ilya/.rvm/scripts/irbrc.rb'
     alias original_load load
 
     def load(filepath)
-      ['.rb', '.bundle'].each do |ext|
+      ['.rb', '.bundle', ''].each do |ext|
         filepath_with_ext = filepath.end_with?(ext) ? filepath : filepath + ext
         candidates = ['/', *$LOAD_PATH].map { |dir| File.join(dir, filepath_with_ext) }
         resolved = candidates.detect { |f| File.exist?(f) }
 
         if resolved
-          if File.extname(resolved) == '.rb'
+          if ['.rb', '.mspec'].include?(File.extname(resolved))
             $debug.puts "load #{resolved}"
             RubyRb.require(resolved)
             $LOADED_FEATURES << resolved unless $LOADED_FEATURES.include?(resolved)

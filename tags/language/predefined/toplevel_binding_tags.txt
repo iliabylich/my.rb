@@ -1,0 +1,5 @@
+fails:The TOPLEVEL_BINDING constant only includes local variables defined in the main script, not in required files or eval
+fails:The TOPLEVEL_BINDING constant has no local variables in files required before the main script
+fails:The TOPLEVEL_BINDING constant merges local variables of the main script with dynamically-defined Binding variables
+fails:The TOPLEVEL_BINDING constant gets updated variables values as they are defined and set
+fails:The TOPLEVEL_BINDING constant is always the same object for all top levels

@@ -1,0 +1,3 @@
+fails:The || operator evaluated to false if all of its operands are false
+fails:The || operator has a higher precedence than 'break' in 'break true || false'
+fails:The || operator has a higher precedence than 'return' in 'return true || false'

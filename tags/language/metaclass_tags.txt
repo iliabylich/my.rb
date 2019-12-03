@@ -1,0 +1,1 @@
+fails:A constant on a metaclass cannot be accessed via object::CONST

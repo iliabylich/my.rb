@@ -1,0 +1,2 @@
+fails:The retry statement re-executes the closest block
+fails:The retry keyword inside a begin block's rescue block causes the begin block to be executed again

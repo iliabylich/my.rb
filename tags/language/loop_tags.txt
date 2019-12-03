@@ -1,0 +1,7 @@
+fails:The loop expression repeats the given block until a break is called
+fails:The loop expression executes code in its own scope
+fails:The loop expression returns the value passed to break if interrupted by break
+fails:The loop expression returns nil if interrupted by break with no arguments
+fails:The loop expression skips to end of body with next
+fails:The loop expression restarts the current iteration with redo
+fails:The loop expression uses a spaghetti nightmare of redo, next and break

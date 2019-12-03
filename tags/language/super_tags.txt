@@ -1,0 +1,18 @@
+fails:The super keyword raises an error error when super method does not exist
+fails:The super keyword uses given block even if arguments are passed explicitly
+fails:The super keyword uses block argument given to method when used in a block
+fails:The super keyword calls the superclass method when in a block
+fails:The super keyword calls the superclass method when initial method is defined_method'd
+fails:The super keyword can call through a define_method multiple times (caching check)
+fails:The super keyword supers up appropriate name even if used for multiple method names
+fails:The super keyword raises a RuntimeError when called with implicit arguments from a method defined with define_method
+fails:The super keyword calls method_missing when a superclass method is not found
+fails:The super keyword respects the original module a method is aliased from
+fails:The super keyword sees the included version of a module a method is alias from
+fails:The super keyword find super from a singleton class
+fails:The super keyword wraps into array and passes along reassigned rest args with non-array scalar value
+fails:The super keyword invokes methods from a chain of anonymous modules
+fails:The super keyword without explicit arguments can accept a block but still pass the original arguments
+fails:The super keyword passes along block via reference to method expecting a reference
+fails:The super keyword passes along a block via reference to a method that yields
+fails:The super keyword without explicit arguments that are '_'
