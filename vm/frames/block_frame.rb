@@ -1,28 +1,35 @@
 BlockFrame = FrameClass.new do
   attr_reader :kwoptarg_ids, :parent_frame
 
-  attr_accessor :block
+  attr_reader :block
 
-  attr_reader :block_args
+  attr_reader :arg_values
 
-  def initialize(parent_frame:, block_args:)
+  def initialize(parent_frame:, arg_values:, block:)
     self._self = parent_frame._self
     self.nesting = parent_frame.nesting
     self.locals = Locals.new
 
+    @block = block
     @parent_frame = parent_frame
 
-    if block_args.is_a?(Array) && block_args.length == 1 && block_args[0].is_a?(Array) && !iseq.args_info[:ambiguous_param0]
-      block_args = block_args[0]
+    if arg_values.is_a?(Array) && arg_values.length == 1 && arg_values[0].is_a?(Array) && !iseq.args_info[:ambiguous_param0]
+      arg_values = arg_values[0]
     end
 
-    @block_args = block_args
+    @arg_values = arg_values
   end
 
   def prepare
+    values = arg_values
+
+    if iseq.args_info[:block_start]
+      values << block
+    end
+
     MethodArguments.new(
       iseq: iseq,
-      values: block_args,
+      values: values,
       locals: locals
     ).extract
 

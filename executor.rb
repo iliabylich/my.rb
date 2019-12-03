@@ -133,7 +133,7 @@ class Executor
     block =
       if block_iseq
         original_block_frame = self.current_frame
-        proc do |*args|
+        proc do |*args, &block|
           VM.instance.execute(
             block_iseq,
               block_args: args,
@@ -143,7 +143,8 @@ class Executor
                   # self switch, we should follow it
                   VM.instance.current_frame._self = self
                 end
-              }
+              },
+              block: block
           )
         end
       elsif (implicit_block = pop)
@@ -190,9 +191,11 @@ class Executor
     method_name
   end
 
+  DEFINE_SINGLETON_METHOD = Kernel.instance_method(:define_singleton_method)
+
   def __define_singleton_method(recv:, method_name:, body_iseq:)
     parent_nesting = current_nesting
-    recv.define_singleton_method(method_name) do |*method_args, &block|
+    DEFINE_SINGLETON_METHOD.bind(recv).call(method_name) do |*method_args, &block|
       VM.instance.execute(body_iseq, _self: self, method_args: method_args, block: block, parent_nesting: parent_nesting)
     end
     method_name
@@ -433,7 +436,7 @@ class Executor
   end
 
   def execute_splatarray((_flag))
-    push(pop.to_a)
+    push(pop.to_a.dup)
   end
 
   def execute_concatarray(_)
@@ -503,6 +506,12 @@ class Executor
     item = pop
     list = pop
     push(list << item)
+  end
+
+  def execute_opt_gt(*)
+    arg = pop
+    recv = pop
+    push(recv > arg)
   end
 
   def execute_getglobal((name))
@@ -755,6 +764,12 @@ class Executor
     arg = pop
     recv = pop
     push(recv < arg)
+  end
+
+  def execute_opt_le(_)
+    arg = pop
+    recv = pop
+    push(recv <= arg)
   end
 
   def execute_invokeblock((options))

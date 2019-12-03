@@ -4,30 +4,37 @@ MethodFrame = FrameClass.new do
   attr_reader :arg_values
   attr_reader :kwoptarg_ids
 
-  attr_accessor :block
+  attr_reader :block
 
   def initialize(parent_nesting:, _self:, arg_values:, block:)
     self._self = _self
     self.nesting = parent_nesting
     self.locals = Locals.new
 
-    self.block = block
-
+    @block = block
     @arg_values = arg_values.dup
   end
 
   def prepare
+    values = arg_values
+
+    if iseq.args_info[:block_start]
+      values << block
+    end
+
     MethodArguments.new(
       iseq: iseq,
-      values: arg_values,
+      values: values,
       locals: locals
     ).extract
 
     @kwoptarg_ids = (iseq.args_info[:keyword] || []).grep(Array).map { |name,| locals.find(name: name).id }
   end
 
+  RESPOND_TO = Kernel.instance_method(:respond_to?)
+
   def pretty_name
-    klass = BasicObject === _self ? 'BasicObject' : _self.class
+    klass = RESPOND_TO.bind(_self).call(:class) ? _self.class : '(some BasicObject)'
     "#{klass}##{name}"
   end
 

@@ -1,3 +1,2 @@
-fails:The unpacking splat operator (*) returns a new array containing the same values when applied to an array inside an empty array
 fails:The unpacking splat operator (*) when applied to a non-Array value attempts to coerce it to Array if the object respond_to?(:to_a)
 fails:The unpacking splat operator (*) when applied to a BasicObject coerces it to Array if it respond_to?(:to_a)

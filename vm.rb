@@ -113,7 +113,8 @@ class VM
       @frame_stack.push_block(
         iseq: iseq,
         parent_frame: payload[:parent_frame],
-        block_args: payload[:block_args],
+        arg_values: payload[:block_args],
+        block: payload[:block]
       )
     when :rescue
       @frame_stack.push_rescue(

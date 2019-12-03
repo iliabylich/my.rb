@@ -35,8 +35,15 @@ class MethodArguments
     needs_kw = kwdata.any? || args_info[:kwrest]
     kwvalues = nil
 
-    if needs_kw && kwvalues.nil?
+    if args_info[:block_start]
+      # inline block (like in css)
+      block_name = arg_names.last
+      block = values.pop
 
+      locals.find(name: block_name).set(block)
+    end
+
+    if needs_kw && kwvalues.nil?
       if values.last.is_a?(Hash)
         # consume
         kwvalues = values.pop
