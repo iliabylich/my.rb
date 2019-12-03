@@ -1,6 +1,5 @@
 fails:The yield call taking no arguments raises a LocalJumpError when the method is not passed a block
 fails:The yield call taking no arguments ignores assignment to the explicit block argument and calls the passed block
-fails:The yield call taking no arguments does not pass a named block to the block being yielded to
 fails:The yield call taking a single argument when no block is given raises a LocalJumpError
 fails:The yield call taking a single argument yielding to a literal block passes an empty Array when the argument is an empty Array
 fails:The yield call taking a single argument yielding to a literal block passes a single, multi-value Array

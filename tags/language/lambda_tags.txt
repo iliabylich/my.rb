@@ -1,5 +1,4 @@
 fails:A lambda literal -> () { } returns a lambda
-fails:A lambda literal -> () { } has its own scope for local variables
 fails:A lambda literal -> () { } assigns variables from parameters for definition '@a = -> (a) { a }'
 fails:A lambda literal -> () { } assigns variables from parameters for definition '@a = -> ((a)) { a }'
 fails:A lambda literal -> () { } assigns variables from parameters for definition '@a = -> ((*a, b)) { [a, b] }'
@@ -12,7 +11,6 @@ fails:A lambda literal -> () { } assigns variables from parameters for definitio
 fails:A lambda literal -> () { } assigns variables from parameters for definition '@a = -> (**k) { k }'
 fails:A lambda literal -> () { } assigns variables from parameters for definition '@a = -> (&b) { b  }'
 fails:A lambda literal -> () { } assigns variables from parameters for definition '@a = -> (a, b) { [a, b] }'
-fails:A lambda expression 'lambda { ... }' calls the #lambda method
 fails:A lambda expression 'lambda { ... }' returns a lambda
 fails:A lambda expression 'lambda { ... }' with an implicit block can be created
 fails:A lambda expression 'lambda { ... }' assigns variables from parameters for definition '@a = lambda { |a| a }'

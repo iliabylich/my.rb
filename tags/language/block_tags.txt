@@ -14,8 +14,6 @@ fails:A block yielded a single Array when non-symbol keys are in a keyword argum
 fails:A block yielded a single Object calls #to_ary on the object when taking multiple arguments
 fails:A block yielded a single Object receives the object if #to_ary returns nil
 fails:A block yielded a single Object raises a TypeError if #to_ary does not return an Array
-fails:A block allows to define a block variable with the same name as the enclosing block
-fails:A block does not capture a local when the block argument has the same name
 fails:A block taking |a| arguments assigns the first value yielded to the argument
 fails:A block taking |a, b| arguments destructures a splatted Array
 fails:A block taking |a, b| arguments calls #to_ary to convert a single yielded object to an Array

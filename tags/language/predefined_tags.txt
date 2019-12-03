@@ -31,12 +31,9 @@ fails:Predefined global $! in bodies without ensure should not be cleared when a
 fails:Predefined global $! in ensure-protected bodies should be cleared when an exception is rescued
 fails:Predefined global $! in ensure-protected bodies should not be cleared when an exception is not rescued
 fails:Predefined global $! in ensure-protected bodies should not be cleared when an exception is rescued and rethrown
-fails:Predefined global $. should call #to_int to convert the object to an Integer
-fails:Predefined global $. raises TypeError if object can't be converted to an Integer
 fails:Predefined global $_ is set to the last line read by e.g. StringIO#gets
 fails:Predefined global $_ is set at the method-scoped level rather than block-scoped
 fails:Predefined global $_ can be assigned any value
-fails:Execution variable $: is initialized to an array of strings
 fails:Global variable $0 is the path given as the main script and the same as __FILE__
 fails:The predefined global constant STDIN has the encodings set by #set_encoding
 fails:The predefined global constant STDIN retains the encoding set by #set_encoding when Encoding.default_external is changed

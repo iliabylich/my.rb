@@ -1,8 +1,0 @@
-fails:The while expression stops running body if interrupted by break
-fails:The while expression stops running body if interrupted by break with unless in a parenthesized attribute op-assign-or value
-fails:The while expression stops running body if interrupted by break with unless in a begin ... end attribute op-assign-or value
-fails:The while expression stops running body if interrupted by break in a parenthesized attribute op-assign-or value
-fails:The while expression stops running body if interrupted by break in a begin ... end attribute op-assign-or value
-fails:The while modifier skips to end of body with next
-fails:The while modifier restarts the current iteration without reevaluating condition with redo
-fails:The while modifier with begin .. end block stops running block if interrupted by break
