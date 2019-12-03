@@ -70,7 +70,7 @@ class FrameClass
       end
 
       def exit!(value)
-        VM.instance.__log "... scheduling force [:leave] (on #{self.name} with #{value.inspect})"
+        VM.instance.__log { "... scheduling force [:leave] (on #{self.name} with #{value.inspect})" }
 
         iseq.insns.clear
         iseq.insns.push([:leave])

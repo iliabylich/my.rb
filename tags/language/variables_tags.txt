@@ -1,27 +1,5 @@
-fails:Multiple assignment with a single RHS value assigns a simple MLHS
-fails:Multiple assignment with a single RHS value calls #to_ary to convert an Object RHS when assigning a simple MLHS
-fails:Multiple assignment with a single RHS value calls #to_ary if it is private
-fails:Multiple assignment with a single RHS value does not call #to_ary if #respond_to? returns false
 fails:Multiple assignment with a single RHS value wraps the Object in an Array if #to_ary returns nil
-fails:Multiple assignment with a single RHS value raises a TypeError of #to_ary does not return an Array
-fails:Multiple assignment with a single RHS value does not call #to_a to convert an Object RHS when assigning a simple MLHS
-fails:Multiple assignment with a single RHS value does not call #to_ary on an Array instance
-fails:Multiple assignment with a single RHS value does not call #to_a on an Array instance
-fails:Multiple assignment with a single RHS value returns the RHS when it is an Array
-fails:Multiple assignment with a single RHS value returns the RHS when it is an Array subclass
-fails:Multiple assignment with a single RHS value does not call #to_ary on an Array subclass instance
-fails:Multiple assignment with a single RHS value does not call #to_a on an Array subclass instance
-fails:Multiple assignment with a single RHS value calls #to_ary to convert an Object RHS
-fails:Multiple assignment with a single RHS value raises a TypeError if #to_ary does not return an Array
 fails:Multiple assignment with a single RHS value assigns an Array when the RHS is an Array subclass
-fails:Multiple assignment with a single RHS value calls #to_ary to convert an Object RHS with MLHS
-fails:Multiple assignment with a single RHS value raises a TypeError if #to_ary does not return an Array with MLHS
-fails:Multiple assignment with a single RHS value does not call #to_a to convert an Object RHS with a MLHS
-fails:Multiple assignment with a single RHS value assigns a MLHS with a trailing splat
-fails:Multiple assignment with a single RHS value assigns a grouped LHS with splats
-fails:Multiple assignment with a single RHS value assigns values from a RHS method call
-fails:Multiple assignment with a single RHS value calls #to_ary on the value returned by the method call
-fails:Multiple assignment with a single RHS value raises a TypeError if #to_ary does not return an Array on a single RHS
 fails:Multiple assignment with a single splatted RHS value assigns a single grouped LHS splat
 fails:Multiple assignment with a single splatted RHS value does not call #to_a on an Array
 fails:Multiple assignment with a single splatted RHS value does not call #to_a on an Array subclass
@@ -37,7 +15,6 @@ fails:Multiple assignment with a single splatted RHS value assigns a MLHS with l
 fails:Multiple assignment with a single splatted RHS value assigns a MLHS with a middle splat
 fails:Multiple assignment with a single splatted RHS value does not call #to_ary to convert an Object RHS with a single LHS
 fails:Multiple assignment with a single splatted RHS value raises a TypeError if #to_a does not return an Array with a single LHS
-fails:Multiple assignment with a single splatted RHS value calls #to_a to convert an Object splat RHS when assigned to a simple MLHS
 fails:Multiple assignment with a single splatted RHS value raises a TypeError if #to_a does not return an Array with a simple MLHS
 fails:Multiple assignment with a single splatted RHS value does not call #to_ary to convert an Object splat RHS when assigned to a simple MLHS
 fails:Multiple assignment with a single splatted RHS value raises a TypeError if #to_a does not return an Array with MLHS
@@ -45,19 +22,8 @@ fails:Multiple assignment with a single splatted RHS value does not call #to_ary
 fails:Multiple assignment with a single splatted RHS value assigns a grouped LHS without splats
 fails:Multiple assignment with a single splatted RHS value assigns a grouped LHS with splats
 fails:Multiple assignment with a single splatted RHS value assigns constants
-fails:Multiple assignment with a MRHS value does not call #to_a to convert an Object in a MRHS
-fails:Multiple assignment with a MRHS value does not call #to_ary to convert an Object in a MRHS
 fails:Multiple assignment with a MRHS value raises a TypeError if #to_a does not return an Array with a splat MRHS
 fails:Multiple assignment with a MRHS value does not call #to_ary to convert a splatted Object with a splat MRHS
-fails:Multiple assignment with a MRHS value assigns a grouped LHS without splat from a simple Array
-fails:Multiple assignment with a MRHS value assigns a grouped LHS without splat from nested Arrays
-fails:Multiple assignment with a MRHS value assigns a grouped LHS with splats from nested Arrays for simple values
 fails:Multiple assignment with a MRHS value assigns a grouped LHS with splats from nested Arrays for nested arrays
-fails:Multiple assignment with a MRHS value calls #to_ary to convert an Object when the position receiving the value is a multiple assignment
-fails:Multiple assignment with a MRHS value raises a TypeError if #to_ary does not return an Array
-fails:Multiple assignment with a MRHS value calls #to_a to convert a splatted Object value in a MRHS
-fails:Multiple assignment with a MRHS value calls #to_ary to convert a splatted Object when the position receiving the value is a multiple assignment
-fails:Multiple assignment with a MRHS value raises a TypeError if #to_ary does not return an Array in a MRHS
-fails:Multiple assignment with a MRHS value does not call #to_ary to convert a splatted Object when the position receiving the value is a rest variable
 fails:A local variable assigned only within a conditional block accessed from a later closure is nil
 fails:Local variable shadowing does not warn in verbose mode

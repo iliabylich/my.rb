@@ -124,6 +124,9 @@ cli = CLI.new
 if ENV['DISABLE_BREAKPOINTS']
   class Binding
     def irb
+      e = NotImplementedError.new('binding.irb')
+      e.set_backtrace(caller(5))
+      raise e
     end
   end
 end

@@ -14,7 +14,9 @@ class MethodArguments
 
     # this array contains all arguments mixed with utility vars to extract kwargs/mlhs
     arg_names.reverse_each.with_index(3) do |arg_name, idx|
-      arg_name += 1 if arg_name.is_a?(Integer) # virtual attribute that holds mlhs value
+      # unused args (like virtual attribute that holds mlhs value)
+      # have have numeric names
+      arg_name += 1 if arg_name.is_a?(Integer)
       locals.declare(name: arg_name, id: idx)
     end
 
@@ -59,7 +61,7 @@ class MethodArguments
       arg_name += 1 if arg_name.is_a?(Integer)
       arg_value = values.shift
       locals.find(name: arg_name).set(arg_value)
-      VM.instance.__log("req: #{arg_name} = #{arg_value}")
+      VM.instance.__log { "req: #{arg_name} = #{arg_value}" }
     end
 
     opt_info.each do |label|
@@ -67,15 +69,16 @@ class MethodArguments
       next if values.none? || values.length < post_num
       arg_value = values.shift
       locals.find(name: arg_name).set(arg_value)
-      VM.instance.__log("opt: #{arg_name} = #{arg_value}")
+      VM.instance.__log { "opt: #{arg_name} = #{arg_value}" }
       VM.instance.jump(label)
     end
 
     if rest_start
       arg_name = arg_names.shift
+      arg_name += 1 if arg_name.is_a?(Integer)
       arg_value = values[0..-(post_num + 1)]
       locals.find(name: arg_name).set(arg_value)
-      VM.instance.__log("rest: #{arg_name} = #{arg_value.inspect}")
+      VM.instance.__log { "rest: #{arg_name} = #{arg_value.inspect}" }
 
       @values = values[post_num..-1] || []
     end
@@ -85,7 +88,7 @@ class MethodArguments
       arg_name += 1 if arg_name.is_a?(Integer)
       arg_value = values.shift
       locals.find(name: arg_name).set(arg_value)
-      VM.instance.__log("post: #{arg_name} = #{arg_value}")
+      VM.instance.__log { "post: #{arg_name} = #{arg_value}" }
     end
 
     kwdata.each do |kwarg|
@@ -100,12 +103,12 @@ class MethodArguments
         if kwvalues.key?(arg_name)
           # value given
           arg_value = kwvalues.delete(arg_name)
-          VM.instance.__log("kwopt: #{arg_name} = #{arg_value}")
+          VM.instance.__log { "kwopt: #{arg_name} = #{arg_value}" }
           local.set(arg_value)
         elsif kwarg.length == 2
           # inline default value
           arg_value = kwarg[1]
-          VM.instance.__log("kwopt: #{arg_name} = #{arg_value}")
+          VM.instance.__log { "kwopt: #{arg_name} = #{arg_value}" }
           local.set(arg_value)
         else
           # there must be some insns to fill it
@@ -118,7 +121,7 @@ class MethodArguments
         if kwvalues.key?(arg_name)
           arg_value = kwvalues.delete(arg_name)
           locals.find(name: arg_name).set(arg_value)
-          VM.instance.__log("kwreq: #{arg_name} = #{arg_value}")
+          VM.instance.__log { "kwreq: #{arg_name} = #{arg_value}" }
         else
           raise ArgumentError, "missing kwarg #{arg_name.inspect}"
         end
@@ -133,13 +136,13 @@ class MethodArguments
         arg_name = arg_names.shift
         arg_name += 1 if arg_name.is_a?(Integer)
         locals.find(name: arg_name).set(arg_value)
-        VM.instance.__log("kwrest(internal #{arg_names}): #{arg_value.inspect}")
+        VM.instance.__log { "kwrest(internal #{arg_names}): #{arg_value.inspect}" }
       end
 
       arg_name = arg_names.shift
       locals.find(name: arg_name).set(arg_value)
 
-      VM.instance.__log("kwreq: #{arg_name} = #{arg_value.inspect}")
+      VM.instance.__log { "kwreq: #{arg_name} = #{arg_value.inspect}" }
     end
   end
 end

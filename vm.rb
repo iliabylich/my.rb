@@ -4,6 +4,7 @@ require_relative './vm/iseq'
 
 class VM
   attr_reader :frame_stack
+  attr_accessor :debug
   attr_accessor :debug_focus_on
   attr_accessor :debug_print_stack
   attr_accessor :debug_print_rest_on_error
@@ -52,13 +53,13 @@ class VM
 
     if (before_eval = payload[:before_eval]); before_eval.call; end
 
-    __log "\n\n--------- BEGIN #{current_frame.header} ---------"
+    __log { "\n\n--------- BEGIN #{current_frame.header} ---------" }
     evaluate_last_frame
-    __log "\n\n--------- END   #{current_frame.header} ---------"
+    __log { "\n\n--------- END   #{current_frame.header} ---------" }
   ensure
     result = pop_frame
 
-    if $! && !$!.is_a?(InternalError)
+    if $! && $!.is_a?(InternalError)
       raise
     end
 
@@ -181,7 +182,7 @@ class VM
       end
 
       unless @previous_frame.equal?(current_frame)
-        __log "  ====== switching to #{current_frame.pretty_name}  ========="
+        __log { "  ====== switching to #{current_frame.pretty_name}  =========" }
       end
       @previous_frame = current_frame
 
@@ -203,7 +204,8 @@ class VM
     current_frame.pretty_name.include?(debug_focus_on)
   end
 
-  def __log(string)
+  def __log(&blk)
+    return unless debug
     return if debug_focus_on && !focused?
 
     if debug_print_stack
@@ -212,7 +214,7 @@ class VM
 
     $debug.print "-->" * @frame_stack.size
     $debug.print " "
-    $debug.puts string
+    $debug.puts blk.call
   end
 
   def pretty_insn(insn)
@@ -245,7 +247,7 @@ class VM
       @last_numeric_insn = nil
     when [:leave]
       current_frame.returning = returning = current_stack.pop
-      __log "#{insn.inspect} (returning #{returning.inspect})"
+      __log { "#{insn.inspect} (returning #{returning.inspect})" }
       clear_current_iseq
     when Array
       execute_array_insn(insn)
@@ -261,7 +263,7 @@ class VM
   def execute_array_insn(insn)
     name, *payload = insn
 
-    __log pretty_insn(insn).inspect
+    __log { pretty_insn(insn).inspect }
 
     with_error_handling do
       @executor.send(:"execute_#{name}", payload)
@@ -282,7 +284,7 @@ class VM
   end
 
   def report_skipped_insn(insn)
-    __log "... #{pretty_insn(insn).inspect}"
+    __log { "... #{pretty_insn(insn).inspect}" }
   end
 
   def current_frame; frame_stack.top; end

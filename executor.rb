@@ -196,7 +196,7 @@ class Executor
   def __define_singleton_method(recv:, method_name:, body_iseq:)
     parent_nesting = current_nesting
     DEFINE_SINGLETON_METHOD.bind(recv).call(method_name) do |*method_args, &block|
-      VM.instance.execute(body_iseq, _self: self, method_args: method_args, block: block, parent_nesting: parent_nesting)
+      ::VM.instance.execute(body_iseq, _self: self, method_args: method_args, block: block, parent_nesting: parent_nesting)
     end
     method_name
   end
@@ -325,12 +325,37 @@ class Executor
     end
   end
 
-  def execute_expandarray((size, flag))
-    array = a = pop
+  RESPOND_TO = Kernel.instance_method(:respond_to?)
 
-    case array
-    when Array
+  def __respond_to?(obj, meth, include_private = false)
+    respond_to = RESPOND_TO.bind(obj)
+
+    # check if it's possible to call #respond_to? normally
+    if respond_to.call(:respond_to?)
+      obj.respond_to?(meth, include_private)
+    else
+      # fallback to Kernel#respond_to?
+      respond_to.call(meth, include_private)
+    end
+  end
+
+  def coerce(obj, meth, expected_type)
+    obj = obj.__send__(meth)
+
+    unless expected_type === obj
+      raise TypeError, "#{meth} must return #{expected_type}"
+    end
+
+    obj
+  end
+
+  def execute_expandarray((size, flag))
+    array = pop
+
+    if Array === array
       array = array.dup
+    elsif __respond_to?(array, :to_ary, true)
+      array = coerce(array, :to_ary, Array)
     else
       array = [array]
     end
@@ -358,8 +383,8 @@ class Executor
     else
       [size, array.size].min.times { values_to_push.push(array.shift) }
 
-      if size > array.size
-        (size - array.size).times { values_to_push.push(nil) }
+      if size > values_to_push.size
+        (size - values_to_push.size).times { values_to_push.push(nil) }
       end
 
       if splat.nonzero?

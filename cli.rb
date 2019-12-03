@@ -90,6 +90,7 @@ class CLI
       $debug = StringIO.new
     end
 
+    VM.instance.debug = options[:debug]
     VM.instance.debug_focus_on = options[:debug_focus_on]
     VM.instance.debug_print_stack = options[:debug_print_stack]
     VM.instance.debug_print_rest_on_error = options[:debug_print_rest_on_error]
