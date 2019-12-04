@@ -837,7 +837,7 @@ class Executor
     if throw_obj.is_a?(Exception)
       raise throw_obj
     else
-      # raise VM::LocalJumpError.new(throw_obj)
+      binding.irb
     end
   end
 
@@ -851,14 +851,7 @@ class Executor
       case state
       when 1
         # return
-        frame = current_frame
-
-        until frame.can_return?
-          frame.exit!(:__unused)
-          frame = frame.parent_frame
-        end
-
-        frame.exit!(throw_obj)
+        raise VM::ReturnError, throw_obj
       when 3
         # next inside rescue/ensure, inside pop_frame,
         # so current_frame is about to die

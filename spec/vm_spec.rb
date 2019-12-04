@@ -183,9 +183,9 @@ RSpec.describe 'VM' do
   it 'supports longjmp via return' do
     assert_evaluates_like_mri(<<-RUBY)
       def m
-        [1].each do |x|
-          [2].each do |y|
-            [3].each do |z|
+        [1, 10].each do |x|
+          [2, 20].each do |y|
+            [3, 30].each do |z|
               return [x,y,z]
             end
           end

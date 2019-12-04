@@ -29,6 +29,10 @@ class Stack
     @stack.pop
   end
 
+  def empty?
+    @stack.empty?
+  end
+
   def top
     @stack.last
   end

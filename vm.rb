@@ -9,19 +9,26 @@ class VM
   attr_accessor :debug_print_stack
   attr_accessor :debug_print_rest_on_error
 
-  class LocalJumpError < ::LocalJumpError
-    def initialize(value)
-      @value = value
-    end
-    attr_reader :value
-  end
-
-  class InternalError < ::RuntimeError
+  class InternalError < ::Exception
     def initialize(*)
       super
       set_backtrace(VM.instance.backtrace)
     end
   end
+
+  class MessageError  < InternalError
+    attr_reader :value
+
+    def initialize(value)
+      @value = value
+    end
+
+    def message
+      "#{self.class}(#{@value.inspect})"
+    end
+  end
+
+  class ReturnError < MessageError; end
 
   def initialize
     @frame_stack = FrameStack.new
@@ -54,12 +61,27 @@ class VM
     if (before_eval = payload[:before_eval]); before_eval.call; end
 
     __log { "\n\n--------- BEGIN #{current_frame.header} ---------" }
-    evaluate_last_frame
+
+    begin
+      evaluate_last_frame
+    rescue ReturnError => e
+      raise unless current_frame.can_return?
+
+      frame = current_frame
+
+      until frame.can_return?
+        frame.exit!(:__unused)
+        frame = frame.parent_frame
+      end
+
+      frame.exit!(e.value)
+    end
+
     __log { "\n\n--------- END   #{current_frame.header} ---------" }
   ensure
     result = pop_frame
 
-    if $! && $!.is_a?(InternalError)
+    if $!
       raise
     end
 
@@ -188,15 +210,7 @@ class VM
 
       current_insn = current_iseq.shift_insn
 
-      begin
-        execute_insn(current_insn)
-      rescue
-        if debug_print_rest_on_error
-          $debug.puts "--------------\nRest (for #{current_frame.pretty_name} in #{current_frame.file}):"
-          current_iseq.insns.each { |insn| p insn }
-        end
-        raise
-      end
+      execute_insn(current_insn)
     end
   end
 
@@ -272,12 +286,9 @@ class VM
 
   def with_error_handling
     yield
+  rescue InternalError => e
+    raise
   rescue Exception => e
-    if e.is_a?(InternalError)
-      # our error, just re-raise ie
-      raise
-    end
-
     # error from the inerpreted code
     clear_current_iseq
     current_frame.current_error = e
