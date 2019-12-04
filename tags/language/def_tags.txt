@@ -6,7 +6,6 @@ fails:Defining an 'initialize_clone' method sets the method's visibility to priv
 fails:Defining a 'respond_to_missing?' method sets the method's visibility to private
 fails:An instance method raises an error with too few arguments
 fails:An instance method raises an error with too many arguments
-fails:An instance method definition with a splat accepts an unnamed '*' argument
 fails:An instance method definition with a splat requires the presence of any arguments that precede the *
 fails:An instance method with a default argument evaluates the default when required arguments precede it
 fails:An instance method with a default argument prefers to assign to a default argument before a splat argument

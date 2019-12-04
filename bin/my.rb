@@ -5,6 +5,8 @@ require_relative '../cli'
 require_relative '../vm'
 
 class RubyRb
+  REAL_EVAL = Kernel.instance_method(:eval)
+
   def self.require(file)
     iseq = RubyVM::InstructionSequence.compile_file(file)
     run_instruction(iseq)
@@ -116,6 +118,10 @@ require '/Users/ilya/.rvm/scripts/irbrc.rb'
     rescue LoadError
       binding.irb
     end
+  end
+
+  def eval(code)
+    RubyRb.eval(code)
   end
 end
 

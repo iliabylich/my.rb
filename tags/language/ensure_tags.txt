@@ -9,5 +9,5 @@ fails:An ensure block inside a method suppresses exception raised in method if r
 fails:An ensure block inside a method suppresses exception raised in rescue if returns value explicitly
 fails:An ensure block inside a method overrides exception raised in rescue if raises exception itself
 fails:An ensure block inside a method suppresses exception raised in method if raises exception itself
-fails:An ensure block inside a class is executed when an exception is raised and rescued
-fails:An ensure block inside 'do end' block is executed when an exception is raised and rescued in it's corresponding begin block
+fails:An ensure block inside a class is executed even when a symbol is thrown
+fails:An ensure block inside 'do end' block is executed even when a symbol is thrown in it's corresponding begin block

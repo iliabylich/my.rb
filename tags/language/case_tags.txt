@@ -5,5 +5,6 @@ fails:The 'case'-construct expands arrays to lists of values
 fails:The 'case'-construct expands arrays from variables before additional listed values
 fails:The 'case'-construct expands arrays from variables before a single additional listed value
 fails:The 'case'-construct expands multiple arrays from variables before additional listed values
+fails:The 'case'-construct never matches when clauses with no values
 fails:The 'case'-construct with no target expression takes multiple expanded arrays
 fails:The 'case'-construct with no target expression calls === even when private

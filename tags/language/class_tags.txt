@@ -1,5 +1,4 @@
 fails:The class keyword creates a new class with semicolon
-fails:The class keyword does not raise a SyntaxError when opening a class without a semicolon
 fails:A class definition raises TypeError if constant given as class name exists and is not a Module
 fails:A class definition raises TypeError if the constant qualifying the class is nil
 fails:A class definition raises TypeError if any constant qualifying the class is not a Module
@@ -12,6 +11,5 @@ fails:A class definition within a block creates a new class in the lexical scope
 fails:A class definition within a block creates a new class in the lexical scope for named classes in a module
 fails:A class definition within a block creates a new class in the lexical scope for anonymous classes assigned to a constant
 fails:A class definition extending an object (sclass) allows accessing the block of the original scope
-fails:A class definition extending an object (sclass) can use return to cause the enclosing method to return
 fails:Reopening a class raises a TypeError when superclasses mismatch
 fails:Reopening a class adds new methods to subclasses

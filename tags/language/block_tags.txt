@@ -14,7 +14,10 @@ fails:A block yielded a single Array when non-symbol keys are in a keyword argum
 fails:A block yielded a single Object calls #to_ary on the object when taking multiple arguments
 fails:A block yielded a single Object receives the object if #to_ary returns nil
 fails:A block yielded a single Object raises a TypeError if #to_ary does not return an Array
+fails:A block taking zero arguments may include a rescue clause
+fails:A block taking || arguments may include a rescue clause
 fails:A block taking |a| arguments assigns the first value yielded to the argument
+fails:A block taking |a| arguments may include a rescue clause
 fails:A block taking |a, b| arguments destructures a splatted Array
 fails:A block taking |a, b| arguments calls #to_ary to convert a single yielded object to an Array
 fails:A block taking |a, b| arguments raises a TypeError if #to_ary does not return an Array
@@ -22,27 +25,18 @@ fails:A block taking |a, b| arguments raises the original exception if #to_ary r
 fails:A block taking |a, *b| arguments destructures a splatted Array
 fails:A block taking |a, *b| arguments calls #to_ary to convert a single yielded object to an Array
 fails:A block taking |a, *b| arguments raises a TypeError if #to_ary does not return an Array
-fails:A block taking |*| arguments does not raise an exception when no values are yielded
-fails:A block taking |*| arguments does not raise an exception when values are yielded
-fails:A block taking |*| arguments does not call #to_ary if the single yielded object is an Array
-fails:A block taking |*| arguments does not call #to_ary if the object does not respond to #to_ary
-fails:A block taking |*| arguments does not call #to_ary to convert a single yielded object to an Array
 fails:A block taking |*a| arguments assigns '[[]]' to the argument when passed an empty Array
 fails:A block taking |*a| arguments assigns a single Array value passed to the argument by wrapping it in an Array
 fails:A block taking |*a| arguments does not call #to_ary if the single yielded object is an Array
 fails:A block taking |a, | arguments calls #to_ary to convert a single yielded object to an Array
 fails:A block taking |a, | arguments raises a TypeError if #to_ary does not return an Array
-fails:A block taking |(a, b)| arguments calls #to_ary to convert a single yielded object to an Array
-fails:A block taking |(a, b)| arguments raises a TypeError if #to_ary does not return an Array
 fails:A block taking |(a, b), c| arguments calls #to_ary to convert a single yielded object to an Array
-fails:A block taking |(a, b), c| arguments raises a TypeError if #to_ary does not return an Array
-fails:A block taking nested |a, ((b, c), d)| destructures a nested value yielded
-fails:A block taking nested |a, ((b, c), d)| destructures a single multi-level Array value yielded
 fails:A block arguments with _ extracts arguments with _
 fails:A block arguments with _ assigns the first variable named
 fails:Block-local variables are introduced with a semi-colon in the parameter list
 fails:Block-local variables can be specified in a comma-separated list after the semi-colon
 fails:Block-local variables need not be preceded by standard parameters
+fails:Block-local variables are not automatically instantiated in the outer scope
 fails:Block-local variables are automatically instantiated in the block
 fails:Post-args appear after a splat
 fails:Post-args are required
@@ -50,3 +44,5 @@ fails:Post-args with required args has an empty splat when there are no remainin
 fails:Post-args with optional args overrides the optional arg before gathering in the splat
 fails:Post-args with optional args uses the required arg before the optional and the splat
 fails:Post-args with optional args overrides the optional args from left to right before gathering the splat
+fails:Post-args with optional args with a circular argument reference warns and uses a nil value when there is an existing local variable with same name
+fails:Post-args with optional args with a circular argument reference warns and uses a nil value when there is an existing method with same name

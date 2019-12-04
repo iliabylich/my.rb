@@ -8,5 +8,4 @@ fails:The next statement in a loop when passed an argument causes ensure blocks 
 fails:The next statement in a loop when passed an argument causes ensure blocks to run when nested in an block
 fails:Assignment via next assigns splatted objects
 fails:Assignment via next assigns splatted objects to a splatted reference via a splatted yield
-fails:Assignment via next assigns objects to multiple variables
 fails:Assignment via next assigns splatted objects to multiple variables

@@ -10,7 +10,6 @@ fails:Invoking a method accepts final implicit literal Hash arguments after the 
 fails:Invoking a method accepts final Hash arguments after the splat
 fails:Invoking a method accepts multiple splat expansions in the same argument list
 fails:Invoking a method expands the Array elements from the splat after executing the arguments and block if no other arguments follow the splat
-fails:Invoking a method expands an array to arguments grouped in parentheses which in turn takes rest arguments
 fails:Invoking a method with optional argument(s), expands an array to arguments grouped in parentheses
 fails:Invoking a method with required args after the rest arguments binds the required arguments first
 fails:Invoking a method with mandatory arguments after optional arguments binds the required arguments first

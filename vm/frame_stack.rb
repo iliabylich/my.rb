@@ -17,7 +17,7 @@ class FrameStack
     @stack << frame
     frame.prepare
     if @stack.size > 100
-      raise VM::InternalError, 'stack overflow'
+      raise '(vm) stack overflow'
     end
   end
 

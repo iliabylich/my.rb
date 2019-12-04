@@ -1,8 +1,6 @@
 fails:Ruby character strings taints the result of interpolation when an interpolated value is tainted
 fails:Ruby character strings untrusts the result of interpolation when an interpolated value is untrusted
-fails:Ruby character strings calls #to_s when the object is not a String
 fails:Ruby character strings calls #to_s as a private method
-fails:Ruby character strings uses an internal representation when #to_s doesn't return a String
 fails:Ruby String literals with a magic frozen comment produce the same object each time
 fails:Ruby String literals with a magic frozen comment produce the same object for literals with the same content
 fails:Ruby String literals with a magic frozen comment produce the same object for literals with the same content in different files

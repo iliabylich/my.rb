@@ -1,3 +1,1 @@
 fails:Literal Regexps matches against $_ (last input) in a conditional if no explicit matchee provided
-fails:Literal Regexps supports conditional regular expressions with positional capture groups
-fails:Literal Regexps supports conditional regular expressions with named capture groups

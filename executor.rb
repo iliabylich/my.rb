@@ -109,6 +109,8 @@ class Executor
         recv.alias_method(new_method_name, existing_method_name)
 
         nil
+      when :'core#undef_method'
+        # noop
       else
 
         if (options[:flag] & VM_CALL_ARGS_SPLAT).nonzero? && kwarg_names.nil?
@@ -541,7 +543,7 @@ class Executor
 
   def execute_getglobal((name))
     # unfortunately there's no introspection API atm
-    push eval(name.to_s)
+    push RubyRb::REAL_EVAL.bind(self).call(name.to_s)
   end
 
   def execute_setconstant((name))
@@ -699,7 +701,7 @@ class Executor
     # there's no way to set a gvar by name/value
     # but eval can reference locals
     value = pop
-    eval("#{name} = value")
+    RubyRb::REAL_EVAL.bind(self).call("#{name} = value")
   end
 
   def execute_opt_and(_)
