@@ -10,7 +10,6 @@ fails:The super keyword calls method_missing when a superclass method is not fou
 fails:The super keyword respects the original module a method is aliased from
 fails:The super keyword sees the included version of a module a method is alias from
 fails:The super keyword find super from a singleton class
-fails:The super keyword wraps into array and passes along reassigned rest args with non-array scalar value
 fails:The super keyword invokes methods from a chain of anonymous modules
 fails:The super keyword without explicit arguments can accept a block but still pass the original arguments
 fails:The super keyword passes along block via reference to method expecting a reference

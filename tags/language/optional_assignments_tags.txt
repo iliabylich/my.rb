@@ -1,2 +1,0 @@
-fails:Optional variable assignments using ||= using a single variable assigns a new variable
-fails:Optional variable assignments using &&= using a single variable leaves new variable unassigned

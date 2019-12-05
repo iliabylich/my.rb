@@ -33,16 +33,10 @@ fails:A block taking |a, | arguments raises a TypeError if #to_ary does not retu
 fails:A block taking |(a, b), c| arguments calls #to_ary to convert a single yielded object to an Array
 fails:A block arguments with _ extracts arguments with _
 fails:A block arguments with _ assigns the first variable named
-fails:Block-local variables are introduced with a semi-colon in the parameter list
-fails:Block-local variables can be specified in a comma-separated list after the semi-colon
-fails:Block-local variables need not be preceded by standard parameters
 fails:Block-local variables are not automatically instantiated in the outer scope
-fails:Block-local variables are automatically instantiated in the block
 fails:Post-args appear after a splat
 fails:Post-args are required
 fails:Post-args with required args has an empty splat when there are no remaining args
 fails:Post-args with optional args overrides the optional arg before gathering in the splat
 fails:Post-args with optional args uses the required arg before the optional and the splat
 fails:Post-args with optional args overrides the optional args from left to right before gathering the splat
-fails:Post-args with optional args with a circular argument reference warns and uses a nil value when there is an existing local variable with same name
-fails:Post-args with optional args with a circular argument reference warns and uses a nil value when there is an existing method with same name
