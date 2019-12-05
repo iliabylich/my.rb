@@ -775,23 +775,42 @@ class Executor
     VM.instance.jump(else_label)
   end
 
+  VM_CHECKMATCH_TYPE_MASK = 0x03
+  VM_CHECKMATCH_ARRAY     = 0x04
   VM_CHECKMATCH_TYPE_WHEN = 1
   VM_CHECKMATCH_TYPE_CASE = 2
   VM_CHECKMATCH_TYPE_RESCUE = 3
 
+  def __checkmatch(pattern, target, match_type)
+    if match_type == VM_CHECKMATCH_TYPE_WHEN
+      return !!pattern
+    end
+
+
+    if match_type == VM_CHECKMATCH_TYPE_RESCUE
+      if !pattern.is_a?(Module)
+        raise TypeError, 'class or module required for rescue clause'
+      end
+    end
+
+    if match_type == VM_CHECKMATCH_TYPE_CASE || match_type == VM_CHECKMATCH_TYPE_RESCUE
+      return pattern.__send__(:===, target)
+    end
+
+    raise 'check_match: unreachable'
+  end
+
   def execute_checkmatch((flag))
     pattern = pop
     target = pop
+
+    match_type = flag & VM_CHECKMATCH_TYPE_MASK
+
     verdict =
-      case flag
-      when VM_CHECKMATCH_TYPE_WHEN
-        !!pattern
-      when VM_CHECKMATCH_TYPE_CASE
-        pattern === target
-      when VM_CHECKMATCH_TYPE_RESCUE
-        pattern.is_a?(Module) && pattern === target
+      if (flag & VM_CHECKMATCH_ARRAY).nonzero?
+        pattern.any? { |item_pattern| __checkmatch(item_pattern, target, match_type) }
       else
-        binding.irb
+        __checkmatch(pattern, target, match_type)
       end
 
     push(verdict)
