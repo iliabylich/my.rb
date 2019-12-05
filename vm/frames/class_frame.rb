@@ -3,7 +3,6 @@ ClassFrame = FrameClass.new do
     @parent_frame = parent_frame
     @name = name
     @superclass = superclass
-    self.locals = Locals.new
   end
 
   def prepare

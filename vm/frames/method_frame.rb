@@ -9,7 +9,6 @@ MethodFrame = FrameClass.new do
   def initialize(parent_nesting:, _self:, arg_values:, block:)
     self._self = _self
     self.nesting = parent_nesting
-    self.locals = Locals.new
 
     @block = block
     @arg_values = arg_values.dup

@@ -2,8 +2,6 @@ ModuleFrame = FrameClass.new do
   def initialize(parent_frame:, name:)
     @parent_frame = parent_frame
     @name = name
-
-    self.locals = Locals.new
   end
 
   def pretty_name

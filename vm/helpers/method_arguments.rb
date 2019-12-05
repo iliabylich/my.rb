@@ -4,21 +4,13 @@ class MethodArguments
   def initialize(iseq:, values:, locals:)
     @values = values.dup
     @locals = locals
+    @arg_names = iseq.lvar_names.dup
 
-    @arg_names = iseq.arg_names.dup
     @args_info = iseq.args_info.dup
   end
 
   def extract
     labels_to_skip = []
-
-    # this array contains all arguments mixed with utility vars to extract kwargs/mlhs
-    arg_names.reverse_each.with_index(3) do |arg_name, idx|
-      # unused args (like virtual attribute that holds mlhs value)
-      # have have numeric names
-      arg_name += 1 if arg_name.is_a?(Integer)
-      locals.declare(name: arg_name, id: idx)
-    end
 
     req_args_count = args_info[:lead_num] || 0
 

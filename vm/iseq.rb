@@ -43,7 +43,7 @@ class ISeq
     @ruby_iseq[5]
   end
 
-  def arg_names
+  def lvar_names
     @ruby_iseq[10]
   end
 

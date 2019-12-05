@@ -270,17 +270,29 @@ class Executor
   def execute_getlocal((local_var_id, level))
     frame = level.times.inject(current_frame) { |f| f.parent_frame }
     local = frame.locals.find(id: local_var_id)
-    push(local.get)
+    value = local.get
+    if value.equal?(Locals::UNDEFINED)
+      value = nil
+    end
+    push(value)
   end
 
   def execute_getlocal_WC_0((local_var_id))
     local = current_frame.locals.find(id: local_var_id)
-    push(local.get)
+    value = local.get
+    if value.equal?(Locals::UNDEFINED)
+      value = nil
+    end
+    push(value)
   end
 
   def execute_getlocal_WC_1((local_var_id))
     local = current_frame.parent_frame.locals.find(id: local_var_id)
-    push(local.get)
+    value = local.get
+    if value.equal?(Locals::UNDEFINED)
+      value = nil
+    end
+    push(value)
   end
 
   def execute_setlocal_WC_0((local_var_id))
@@ -342,13 +354,17 @@ class Executor
   end
 
   def coerce(obj, meth, expected_type)
-    obj = obj.__send__(meth)
+    result = obj.__send__(meth)
 
-    unless expected_type === obj
+    if result == nil
+      return [obj]
+    end
+
+    unless expected_type === result
       raise TypeError, "#{meth} must return #{expected_type}"
     end
 
-    obj
+    result
   end
 
   def execute_expandarray((size, flag))
@@ -378,7 +394,7 @@ class Executor
       [size, array.size].min.times { values_to_push.push(array.pop) }
 
       if splat.nonzero?
-        values_to_push.push(array)
+        values_to_push.push(array.to_a)
       end
 
       values_to_push.each { |item| push(item) }
@@ -390,7 +406,7 @@ class Executor
       end
 
       if splat.nonzero?
-        values_to_push.push(array)
+        values_to_push.push(array.to_a)
       end
 
       values_to_push.reverse_each { |item| push(item) }
@@ -463,7 +479,29 @@ class Executor
   end
 
   def execute_splatarray((_flag))
-    push(pop.to_a.dup)
+    value = pop
+    if Array === value
+      if value.instance_of?(Array)
+        result = value.dup
+      else
+        result = Array[*value]
+      end
+    elsif value == nil
+      result = value.to_a
+    else
+      if value.respond_to?(:to_a, true)
+        result = value.send(:to_a)
+        if result == nil
+          result = [value]
+        elsif !result.is_a?(Array)
+          raise TypeError, "expected to_a to return an Array"
+        end
+      else
+        result = [value]
+      end
+    end
+
+    push(result)
   end
 
   def execute_concatarray(_)
@@ -874,5 +912,9 @@ class Executor
       # throw continue
       _do_throw(throw_obj)
     end
+  end
+
+  def execute_reverse((n))
+    n.times.map { pop }.each { |value| push(value) }
   end
 end

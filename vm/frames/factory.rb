@@ -49,6 +49,7 @@ class FrameClass
         instance.file = iseq.file
         instance.line = iseq.line
         instance.name = iseq.name
+        instance.locals = Locals.new(iseq.lvar_names)
 
         instance.returning = :UNDEFINED
 

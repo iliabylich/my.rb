@@ -4,7 +4,6 @@ EnsureFrame = FrameClass.new do
   def initialize(parent_frame:)
     self._self = parent_frame._self
     self.nesting = parent_frame.nesting
-    self.locals = Locals.new
 
     @parent_frame = parent_frame
 

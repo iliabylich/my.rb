@@ -17,8 +17,16 @@ class Locals
   UNDEFINED = Object.new
   def UNDEFINED.inspect; 'UNDEFINED'; end
 
-  def initialize
+  def initialize(initial_names)
     @set = Set.new
+
+    initial_names.reverse_each.with_index(3) do |arg_name, idx|
+      # unused args (like virtual attribute that holds mlhs value)
+      # have have numeric names
+      arg_name += 1 if arg_name.is_a?(Integer)
+      declare(name: arg_name, id: idx)
+      find(id: idx).set(Locals::UNDEFINED)
+    end
   end
 
   def declared?(name: nil, id: nil)
@@ -26,7 +34,7 @@ class Locals
   end
 
   def declare(name: nil, id: nil)
-    @set << Local.new(name: name, id: id, value: UNDEFINED)
+    @set << Local.new(name: name, id: id, value: nil)
   end
 
   def find(name: nil, id: nil)
@@ -39,7 +47,9 @@ class Locals
         raise NotImplementedError, "At least one of name:/id: is required"
       end
 
-    raise VM::InternalError, "No local name=#{name.inspect}/id=#{id.inspect}" if result.nil?
+    if result.nil?
+      raise VM::InternalError, "No local name=#{name.inspect}/id=#{id.inspect}"
+    end
 
     result
   end

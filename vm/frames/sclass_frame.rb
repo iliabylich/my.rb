@@ -2,8 +2,6 @@ SClassFrame = FrameClass.new do
   def initialize(parent_frame:, of:)
     @parent_frame = parent_frame
     @of = of
-
-    self.locals = Locals.new
   end
 
   def prepare
