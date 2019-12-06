@@ -1,4 +1,4 @@
-class DefinitionScope
+class MethodDefinitionScope
   def self.new(frame)
     case frame._self
     when Class, Module

@@ -105,20 +105,22 @@ class VM
         @frame_stack.push_module(
           iseq: iseq,
           parent_frame: current_frame,
-          name: payload[:name]
+          name: payload[:name],
+          scope: payload[:scope]
         )
       when iseq.name.start_with?('<class')
         @frame_stack.push_class(
           iseq: iseq,
           parent_frame: current_frame,
           name: payload[:name],
-          superclass: payload[:superclass]
+          superclass: payload[:superclass],
+          scope: payload[:scope]
         )
       when iseq.name == 'singleton class'
         @frame_stack.push_sclass(
           iseq: iseq,
           parent_frame: current_frame,
-          of: payload[:cbase]
+          of: payload[:of]
         )
       else
         binding.irb

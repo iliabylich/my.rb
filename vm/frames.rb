@@ -1,6 +1,7 @@
 require_relative './locals'
 
-require_relative './helpers/definition_scope'
+require_relative './helpers/method_definition_scope'
+require_relative './helpers/constant_definition_scope'
 require_relative './helpers/backtrace_entry'
 
 require_relative './stack'

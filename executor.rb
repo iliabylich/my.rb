@@ -180,7 +180,7 @@ class Executor
 
   def __define_method(method_name:, body_iseq:)
     parent_nesting = current_nesting
-    define_on = DefinitionScope.new(current_frame)
+    define_on = MethodDefinitionScope.new(current_frame)
 
     define_on.define_method(method_name) do |*method_args, &block|
       ::VM.instance.execute(body_iseq, _self: self, method_args: method_args, block: block, parent_nesting: parent_nesting)
@@ -223,10 +223,19 @@ class Executor
   # Handles class/module/sclass. Have no idea why
   def execute_defineclass((name, iseq))
     superclass = pop
-    cbase = pop
-    cbase = DefinitionScope.new(current_frame) if cbase == :VM_SPECIAL_OBJECT_CONST_BASE
 
-    returned = VM.instance.execute(iseq, name: name, cbase: cbase, superclass: superclass)
+    returned =
+      if name == :singletonclass
+        # !? class << self
+        of = pop
+        VM.instance.execute(iseq, name: name, of: of)
+      else
+        # normal class/module
+        scope = pop
+        scope = current_frame.nesting.last if scope == :VM_SPECIAL_OBJECT_CONST_BASE
+        VM.instance.execute(iseq, name: name, superclass: superclass, scope: scope)
+      end
+
     push(returned)
   end
 
@@ -586,7 +595,7 @@ class Executor
 
   def execute_setconstant((name))
     scope = pop
-    scope = DefinitionScope.new(current_frame) if scope == :VM_SPECIAL_OBJECT_CONST_BASE
+    scope = ConstantDefinitionScope.new(current_frame) if scope == :VM_SPECIAL_OBJECT_CONST_BASE
 
     value = pop
     scope.const_set(name, value)

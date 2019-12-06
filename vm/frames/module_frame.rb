@@ -1,7 +1,8 @@
 ModuleFrame = FrameClass.new do
-  def initialize(parent_frame:, name:)
+  def initialize(parent_frame:, name:, scope:)
     @parent_frame = parent_frame
     @name = name
+    @scope = scope
   end
 
   def pretty_name
@@ -9,13 +10,24 @@ ModuleFrame = FrameClass.new do
   end
 
   def prepare
-    define_on = DefinitionScope.new(@parent_frame)
-
     mod =
-      if define_on.const_defined?(@name)
-        define_on.const_get(@name)
+      if @scope.const_defined?(@name)
+        result = @scope.const_get(@name)
+
+
+
+        case result
+        when Class
+          raise TypeError, "#{@name} is not a module"
+        when Module
+          # ok
+        else
+          raise TypeError, "#{@name} is not a module"
+        end
+
+        result
       else
-        define_on.const_set(@name, Module.new)
+        @scope.const_set(@name, Module.new)
       end
 
     self._self = mod
