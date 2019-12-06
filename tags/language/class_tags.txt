@@ -1,4 +1,3 @@
-fails:The class keyword creates a new class with semicolon
 fails:A class definition raises TypeError if constant given as class name exists and is not a Module
 fails:A class definition raises TypeError if the constant qualifying the class is nil
 fails:A class definition raises TypeError if any constant qualifying the class is not a Module
@@ -7,9 +6,5 @@ fails:A class definition raises an error when reopening a class with BasicObject
 fails:A class definition raises an error when reopening a class with Object as superclass
 fails:A class definition does not allow to set the superclass even if it was not specified by the first declaration
 fails:A class definition allows the declaration of class variables in an instance method
-fails:A class definition within a block creates a new class in the lexical scope for named classes at the toplevel
-fails:A class definition within a block creates a new class in the lexical scope for named classes in a module
-fails:A class definition within a block creates a new class in the lexical scope for anonymous classes assigned to a constant
 fails:A class definition extending an object (sclass) allows accessing the block of the original scope
 fails:Reopening a class raises a TypeError when superclasses mismatch
-fails:Reopening a class adds new methods to subclasses

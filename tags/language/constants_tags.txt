@@ -1,12 +1,8 @@
 fails:Literal (A::X) constant resolution sends #const_missing to the original class or module scope
 fails:Literal (A::X) constant resolution raises a TypeError if a non-class or non-module qualifier is given
-fails:Literal (A::X) constant resolution with dynamically assigned constants searches Object if no class or module qualifier is given
 fails:Constant resolution within methods sends #const_missing to the original class or module scope
 fails:Constant resolution within methods with statically assigned constants searches Object as a lexical scope only if Object is explicitly opened
-fails:Constant resolution within methods with dynamically assigned constants searches the immediate class or module scope first
-fails:Constant resolution within methods with dynamically assigned constants searches the lexical scope of the method not the receiver's immediate class
 fails:Constant resolution within methods with dynamically assigned constants searches Object as a lexical scope only if Object is explicitly opened
-fails:Constant resolution within methods with ||= assigns a global constant if previously undefined
 fails:top-level constant lookup searches Object unsuccessfully when searches on a module
 fails:top-level constant lookup on a class does not search Object after searching other scopes
 fails:Module#private_constant marked constants remain private even when updated
