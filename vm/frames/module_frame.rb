@@ -10,11 +10,16 @@ ModuleFrame = FrameClass.new do
   end
 
   def prepare
+    case @scope
+    when Class, Module
+      # ok
+    else
+      raise TypeError, "#{@scope} is not a class/module"
+    end
+
     mod =
       if @scope.const_defined?(@name)
         result = @scope.const_get(@name)
-
-
 
         case result
         when Class

@@ -7,9 +7,29 @@ ClassFrame = FrameClass.new do
   end
 
   def prepare
+    case @scope
+    when Class, Module
+      # ok
+    else
+      raise TypeError, "#{@scope} is not a class/module"
+    end
+
     klass =
       if @scope.const_defined?(@name, false)
-        @scope.const_get(@name)
+        result = @scope.const_get(@name)
+
+        case result
+        when Class
+          # ok
+        else
+          raise TypeError, "#{@name} is not a class"
+        end
+
+        if @superclass && result.superclass != @superclass
+          raise TypeError, 'superclass mismatch'
+        end
+
+        result
       else
         @scope.const_set(
           @name,

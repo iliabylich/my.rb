@@ -668,7 +668,9 @@ class Executor
 
   def execute_setclassvariable((name))
     value = pop
-    current_frame._self.class_variable_set(name, value)
+    klass = current_frame._self
+    klass = klass.class unless klass.is_a?(Class)
+    klass.class_variable_set(name, value)
   end
 
   module DefinedType

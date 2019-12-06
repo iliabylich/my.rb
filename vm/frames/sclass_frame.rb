@@ -1,4 +1,6 @@
 SClassFrame = FrameClass.new do
+  attr_reader :parent_frame
+
   def initialize(parent_frame:, of:)
     @parent_frame = parent_frame
     @of = of
