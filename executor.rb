@@ -745,6 +745,12 @@ class Executor
     push(recv / arg)
   end
 
+  def execute_opt_regexpmatch1((regexp))
+    string = pop
+    push(regexp =~ string)
+    current_frame.last_match = Regexp.last_match
+  end
+
   def execute_opt_regexpmatch2(_)
     arg = pop
     recv = pop
@@ -962,5 +968,32 @@ class Executor
 
   def execute_reverse((n))
     n.times.map { pop }.each { |value| push(value) }
+  end
+
+  def execute_getspecial((key, type))
+    last_match = current_frame.last_match
+
+    if last_match.nil?
+      push(nil)
+      return
+    end
+
+    result =
+      if type == 0
+        last_match
+      elsif (type & 1).nonzero?
+        case (type >> 1).chr
+        when '&'  then last_match[0]
+        when '`'  then last_match.pre_match
+        when '\'' then last_match.post_match
+        when '+'  then $+
+        else
+          raise "Unsupported backref #{(type >> 1).chr}"
+        end
+      else
+        last_match[type >> 1]
+      end
+
+    push(result)
   end
 end

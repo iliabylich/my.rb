@@ -23,6 +23,7 @@ class FrameClass
       attr_accessor :current_error
 
       attr_accessor :returning
+      attr_accessor :last_match
 
       def pretty_name
         raise VM::InternalError, "#{self.class}#pretty_name is missing"
