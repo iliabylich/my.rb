@@ -18,7 +18,6 @@ fails:Predefined global $+ is equivalent to $~.captures.last
 fails:Predefined global $+ captures the last non nil capture
 fails:Predefined global $+ sets the encoding to the encoding of the source String
 fails:Predefined globals $1..N are equivalent to $~[N]
-fails:Predefined globals $1..N are nil unless a match group occurs
 fails:Predefined globals $1..N sets the encoding to the encoding of the source String
 fails:Predefined global $! should be set to the value of $! before the begin after a successful rescue
 fails:Predefined global $! should be set to the value of $! before the begin after a rescue which returns

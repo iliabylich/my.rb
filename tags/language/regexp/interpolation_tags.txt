@@ -1,1 +1,0 @@
-fails:Regexps with interpolation allows interpolation in extended mode

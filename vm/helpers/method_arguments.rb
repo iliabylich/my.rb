@@ -142,7 +142,11 @@ class MethodArguments
       end
 
       arg_name = arg_names.shift
-      locals.find(name: arg_name).set(arg_value)
+      if arg_name.is_a?(Symbol)
+        locals.find(name: arg_name).set(arg_value)
+      else
+        # **, no need to set it
+      end
 
       VM.instance.__log { "kwreq: #{arg_name} = #{arg_value.inspect}" }
     end

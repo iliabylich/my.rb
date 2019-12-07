@@ -1,3 +1,12 @@
 fails:A lambda literal -> () { } returns a lambda
+fails:A lambda literal -> () { } assigns variables from parameters for definition '@a = -> (*, **k) { k }'
+fails:"A lambda literal -> () { } assigns variables from parameters for definition \n    @a = -> (a, b=1, *c, (*d, (e)), f: 2, g:, h:, **k, &l) do\n      [a, b, c, d, e, f, g, h, k, l]\n    end"
+fails:"A lambda literal -> () { } assigns variables from parameters for definition \n    @a = -> a, b=1, *c, d, e:, f: 2, g:, **k, &l do\n      [a, b, c, d, e, f, g, k, l]\n    end"
 fails:A lambda expression 'lambda { ... }' returns a lambda
 fails:A lambda expression 'lambda { ... }' with an implicit block can be created
+fails:"A lambda expression 'lambda { ... }' assigns variables from parameters for definition \n    def m(*a) yield(*a) end\n    @a = lambda { |a| a }"
+fails:A lambda expression 'lambda { ... }' assigns variables from parameters for definition '@a = lambda { |a, | a }'
+fails:"A lambda expression 'lambda { ... }' assigns variables from parameters for definition \n    def m(a) yield a end\n    def m2() yield end\n    @a = lambda { |a, | a }"
+fails:A lambda expression 'lambda { ... }' assigns variables from parameters for definition '@a = lambda { |*, **k| k }'
+fails:"A lambda expression 'lambda { ... }' assigns variables from parameters for definition \n    @a = lambda do |a, b=1, *c, (*d, (e)), f: 2, g:, h:, **k, &l|\n      [a, b, c, d, e, f, g, h, k, l]\n    end"
+fails:"A lambda expression 'lambda { ... }' assigns variables from parameters for definition \n    @a = lambda do |a, b=1, *c, d, e:, f: 2, g:, **k, &l|\n      [a, b, c, d, e, f, g, k, l]\n    end"
