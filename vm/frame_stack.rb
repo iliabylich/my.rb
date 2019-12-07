@@ -52,6 +52,10 @@ class FrameStack
     push EnsureFrame.new(**args)
   end
 
+  def push_eval(**args)
+    push EvalFrame.new(**args)
+  end
+
   def pop
     @stack.pop
   end

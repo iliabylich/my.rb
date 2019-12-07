@@ -101,6 +101,12 @@ class VM
       @frame_stack.push_top(
         iseq: iseq
       )
+    when :eval
+      @frame_stack.push_eval(
+        iseq: iseq,
+        parent_frame: current_frame,
+        _self: payload[:_self]
+      )
     when :class
       case
       when iseq.name.start_with?('<module')

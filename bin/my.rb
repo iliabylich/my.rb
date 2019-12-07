@@ -6,6 +6,9 @@ require_relative '../vm'
 
 class RubyRb
   REAL_EVAL = Kernel.instance_method(:eval)
+  REAL_INSTANCE_EVAL = BasicObject.instance_method(:instance_eval)
+  REAL_MODULE_EVAL = Module.instance_method(:module_eval)
+  REAL_CLASS_EVAL = Module.instance_method(:class_eval)
   REAL_KERNEL_LAMBDA = Kernel.instance_method(:lambda)
 
   def self.require(file)
@@ -119,10 +122,46 @@ require '/Users/ilya/.rvm/scripts/irbrc.rb'
     rescue LoadError
       binding.irb
     end
+
+    def eval(code)
+      iseq = RubyVM::InstructionSequence.compile(code).to_a
+      iseq[9] = :eval
+      VM.instance.execute(iseq, _self: self)
+    end
+  end
+end
+
+class BasicObject
+  def instance_eval(code = nil, &block)
+    if code
+      iseq = ::RubyVM::InstructionSequence.compile(code).to_a
+      iseq[9] = :eval
+      ::VM.instance.execute(iseq, _self: self)
+    else
+      ::RubyRb::REAL_INSTANCE_EVAL.bind(self).call(&block)
+    end
+  end
+end
+
+class Module
+  def module_eval(code = nil, &block)
+    if code
+      iseq = ::RubyVM::InstructionSequence.compile(code).to_a
+      iseq[9] = :eval
+      ::VM.instance.execute(iseq, _self: self)
+    else
+      ::RubyRb::REAL_MODULE_EVAL.bind(self).call(&block)
+    end
   end
 
-  def eval(code)
-    RubyRb.eval(code)
+  def class_eval(code = nil, &block)
+    if code
+      iseq = ::RubyVM::InstructionSequence.compile(code).to_a
+      iseq[9] = :eval
+      ::VM.instance.execute(iseq, _self: self)
+    else
+      ::RubyRb::REAL_CLASS_EVAL.bind(self).call(&block)
+    end
   end
 end
 

@@ -61,6 +61,17 @@ class Executor
   def execute_opt_send_without_block((options, _flag))
     mid = options[:mid]
 
+    if current_frame.eval? &&
+       (options[:flag] & VM_CALL_VCALL).nonzero? &&
+       (parent = current_frame.parent_frame) &&
+       parent.locals.declared?(name: mid)
+
+      # x = 1; eval("x") - x is a VCALL in eval, so maybe it's a local variable of the parent frame
+      result = parent.locals.find(name: mid).value
+      push(result)
+      return
+    end
+
     if mid == :module_function && options[:orig_argc] == 0
       current_frame.open_module_function_section!
       push(nil)
@@ -636,8 +647,9 @@ class Executor
     push(frame.block)
   end
 
-  def execute_getblockparamproxy(args)
-    push(current_frame.block)
+  def execute_getblockparamproxy((_, level))
+    frame = level.times.inject(current_frame) { |f| f.parent_frame }
+    push(frame.block)
   end
 
   def execute_nop(*); end

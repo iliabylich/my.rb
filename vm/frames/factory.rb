@@ -32,6 +32,7 @@ class FrameClass
       def can_return?;  false; end
       def can_do_next?; false; end
       def can_yield?;   false; end
+      def eval?;        false; end
 
       def prepare; end
 
