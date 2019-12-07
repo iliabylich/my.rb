@@ -631,8 +631,9 @@ class Executor
     SET_IVAR.bind(current_frame._self).call(name, value)
   end
 
-  def execute_getblockparam(args)
-    push(current_frame.block)
+  def execute_getblockparam((_, level))
+    frame = level.times.inject(current_frame) { |f| f.parent_frame }
+    push(frame.block)
   end
 
   def execute_getblockparamproxy(args)
