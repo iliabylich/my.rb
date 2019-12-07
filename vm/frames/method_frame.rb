@@ -25,7 +25,7 @@ MethodFrame = FrameClass.new do
       iseq: iseq,
       values: values,
       locals: locals
-    ).extract
+    ).extract(arity_check: true)
 
     @kwoptarg_ids = (iseq.args_info[:keyword] || []).grep(Array).map { |name,| locals.find(name: name).id }
   end

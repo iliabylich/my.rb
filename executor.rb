@@ -132,6 +132,8 @@ class Executor
     args = []
     kwargs = {}
 
+    creating_a_lambda = false
+
     block =
       if block_iseq
         original_block_frame = self.current_frame
@@ -145,6 +147,8 @@ class Executor
                   # self switch, we should follow it
                   VM.instance.current_frame._self = self
                 end
+
+                VM.instance.current_frame.is_lambda = creating_a_lambda
               },
               block: block
           )
@@ -167,6 +171,18 @@ class Executor
     end
 
     recv = pop
+
+    if mid == :lambda
+      if recv == :FrozenCore
+        creating_a_lambda = true
+      end
+
+      if recv.class.instance_method(:lambda).owner == Kernel
+        if Kernel.instance_method(:lambda) == RubyRb::REAL_KERNEL_LAMBDA
+          creating_a_lambda = true
+        end
+      end
+    end
 
     if (options[:flag] & VM_CALL_ARGS_SPLAT).nonzero? && kwarg_names.nil?
       *head, tail = args

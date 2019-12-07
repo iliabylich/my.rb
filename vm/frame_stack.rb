@@ -15,7 +15,6 @@ class FrameStack
 
   def push(frame)
     @stack << frame
-    frame.prepare
     if @stack.size > 100
       raise '(vm) stack overflow'
     end

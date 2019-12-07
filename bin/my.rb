@@ -6,6 +6,7 @@ require_relative '../vm'
 
 class RubyRb
   REAL_EVAL = Kernel.instance_method(:eval)
+  REAL_KERNEL_LAMBDA = Kernel.instance_method(:lambda)
 
   def self.require(file)
     iseq = RubyVM::InstructionSequence.compile_file(file)

@@ -60,6 +60,8 @@ class VM
 
     if (before_eval = payload[:before_eval]); before_eval.call; end
 
+    current_frame.prepare
+
     __log { "\n\n--------- BEGIN #{current_frame.header} ---------" }
 
     begin

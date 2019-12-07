@@ -9,7 +9,7 @@ class MethodArguments
     @args_info = iseq.args_info.dup
   end
 
-  def extract
+  def extract(arity_check: false)
     labels_to_skip = []
 
     req_args_count = args_info[:lead_num] || 0
@@ -51,6 +51,9 @@ class MethodArguments
     req_args_count.times do
       arg_name = arg_names.shift
       arg_name += 1 if arg_name.is_a?(Integer)
+      if arity_check && values.empty?
+        raise ArgumentError, 'wrong number of arguments'
+      end
       arg_value = values.shift
       locals.find(name: arg_name).set(arg_value)
       VM.instance.__log { "req: #{arg_name} = #{arg_value}" }
@@ -72,12 +75,19 @@ class MethodArguments
       locals.find(name: arg_name).set(arg_value)
       VM.instance.__log { "rest: #{arg_name} = #{arg_value.inspect}" }
 
-      @values = values[post_num..-1] || []
+      if post_num > 0
+        @values = values[post_num..-1] || []
+      else
+        @values = []
+      end
     end
 
     post_num.times do
       arg_name = arg_names.shift
       arg_name += 1 if arg_name.is_a?(Integer)
+      if arity_check && values.empty?
+        raise ArgumentError, 'wrong number of arguments (too few)'
+      end
       arg_value = values.shift
       locals.find(name: arg_name).set(arg_value)
       VM.instance.__log { "post: #{arg_name} = #{arg_value}" }
@@ -135,6 +145,10 @@ class MethodArguments
       locals.find(name: arg_name).set(arg_value)
 
       VM.instance.__log { "kwreq: #{arg_name} = #{arg_value.inspect}" }
+    end
+
+    if arity_check && values.any?
+      raise ArgumentError, 'wrong number of arguments (too many)'
     end
   end
 end

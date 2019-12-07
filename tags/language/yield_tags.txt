@@ -5,11 +5,8 @@ fails:The yield call taking a single argument yielding to a literal block passes
 fails:The yield call taking a single argument yielding to a literal block passes a single, multi-value Array
 fails:The yield call taking a single argument yielding to a lambda passes an empty Array when the argument is an empty Array
 fails:The yield call taking a single argument yielding to a lambda passes a single, multi-value Array
-fails:The yield call taking a single argument yielding to a lambda raises an ArgumentError if too few arguments are passed
 fails:The yield call taking a single argument yielding to a lambda should not destructure an Array into multiple arguments
 fails:The yield call taking multiple arguments raises a LocalJumpError when the method is not passed a block
-fails:The yield call taking multiple arguments raises an ArgumentError if too many arguments are passed to a lambda
-fails:The yield call taking multiple arguments raises an ArgumentError if too few arguments are passed to a lambda
 fails:The yield call taking a single splatted argument raises a LocalJumpError when the method is not passed a block
 fails:The yield call taking multiple arguments with a splat raises a LocalJumpError when the method is not passed a block
 fails:The yield call taking multiple arguments with a splat passes the arguments to the block

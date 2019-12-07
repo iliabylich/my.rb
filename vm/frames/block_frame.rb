@@ -1,4 +1,5 @@
 BlockFrame = FrameClass.new do
+  attr_accessor :is_lambda
   attr_reader :kwoptarg_ids, :parent_frame
 
   attr_reader :block
@@ -30,7 +31,7 @@ BlockFrame = FrameClass.new do
       iseq: iseq,
       values: values,
       locals: locals
-    ).extract
+    ).extract(arity_check: is_lambda)
 
     @kwoptarg_ids = (iseq.args_info[:keyword] || []).grep(Array).map { |name,| locals.find(name: name).id }
   end
