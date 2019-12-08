@@ -68,6 +68,10 @@ class FrameStack
     @stack.size
   end
 
+  def closest(&block)
+    @stack.reverse_each.detect { |frame| block.call(frame) }
+  end
+
   def to_backtrace
     [
       *@stack.map { |frame| BacktraceEntry.new(frame) },

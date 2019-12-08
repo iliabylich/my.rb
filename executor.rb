@@ -11,6 +11,8 @@ class Executor
   def current_self;    vm.current_self;    end
   def current_nesting; vm.current_nesting; end
 
+  def in_eval?; vm.frame_stack.any? { |frame| frame.eval? }; end
+
   def execute_putself(_)
     push(current_self)
   end
@@ -61,9 +63,9 @@ class Executor
   def execute_opt_send_without_block((options, _flag))
     mid = options[:mid]
 
-    if current_frame.eval? &&
+    if in_eval? &&
        (options[:flag] & VM_CALL_VCALL).nonzero? &&
-       (local = current_frame.locals.find_if_declared(name: mid))
+       (local = vm.frame_stack.closest(&:eval?).locals.find_if_declared(name: mid))
 
       # x = 1; eval("x") - x is a VCALL in eval, so maybe it's a local variable of the parent frame
       result = local.value
@@ -768,7 +770,7 @@ class Executor
   def execute_opt_regexpmatch1((regexp))
     string = pop
     push(regexp =~ string)
-    current_frame.last_match = Regexp.last_match
+    (current_frame.svars ||= {})[:backref] = Regexp.last_match
   end
 
   def execute_opt_regexpmatch2(_)
@@ -990,31 +992,65 @@ class Executor
     n.times.map { pop }.each { |value| push(value) }
   end
 
-  def execute_getspecial((key, type))
-    last_match = current_frame.last_match
+  # key:
+  VM_SVAR_LASTLINE = 0
+  VM_SVAR_BACKREF = 1
+  VM_SVAR_EXTRA_START = 2
+  VM_SVAR_FLIPFLOP_START = 2
 
-    if last_match.nil?
-      push(nil)
-      return
+  def __lep_svar_get(key)
+    non_block_frame = vm.frame_stack.closest { |f| !f.is_a?(BlockFrame) }
+    svars = non_block_frame.svars
+    return nil if svars.nil?
+
+    case key
+    when VM_SVAR_LASTLINE then svars[:lastline]
+    when VM_SVAR_BACKREF then svars[:backref]
+    else
+      svars[key]
     end
+  end
+
+  def execute_getspecial((key, type))
+    non_block_frame = vm.frame_stack.closest { |f| !f.is_a?(BlockFrame) }
 
     result =
       if type == 0
-        last_match
-      elsif (type & 1).nonzero?
-        case (type >> 1).chr
-        when '&'  then last_match[0]
-        when '`'  then last_match.pre_match
-        when '\'' then last_match.post_match
-        when '+'  then $+
-        else
-          raise "Unsupported backref #{(type >> 1).chr}"
-        end
+        __lep_svar_get(key)
       else
-        last_match[type >> 1]
+        backref = __lep_svar_get(VM_SVAR_BACKREF)
+
+        if (type & 1).nonzero?
+          case (type >> 1).chr
+          when '&'  then backref && backref[0]
+          when '`'  then backref && backref.pre_match
+          when '\'' then backref && backref.post_match
+          when '+'  then backref && $+
+          else
+            raise "Unsupported backref #{(type >> 1).chr}"
+          end
+        else
+          backref && backref[type >> 1]
+        end
       end
 
     push(result)
+  end
+
+  def execute_setspecial((key))
+    obj = pop
+
+    non_block_frame = vm.frame_stack.closest { |f| !f.is_a?(BlockFrame) }
+    svars = (non_block_frame.svars ||= {})
+
+    case key
+    when VM_SVAR_LASTLINE
+      svars[:lastline] = obj
+    when VM_SVAR_BACKREF
+      svars[:backref] = obj
+    else
+      svars[key] = obj
+    end
   end
 
   def execute_opt_or(_)

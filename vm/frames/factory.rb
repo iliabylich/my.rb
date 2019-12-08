@@ -23,7 +23,8 @@ class FrameClass
       attr_accessor :current_error
 
       attr_accessor :returning
-      attr_accessor :last_match
+
+      attr_reader :svars
 
       def pretty_name
         raise VM::InternalError, "#{self.class}#pretty_name is missing"
@@ -46,6 +47,7 @@ class FrameClass
           @stack = Stack.new
           @labels_to_skip = []
           @in_module_function_section = false
+          @svars = {}
         }
 
         instance.file = iseq.file
