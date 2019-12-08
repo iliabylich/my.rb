@@ -739,15 +739,55 @@ class Executor
       case defined_type
       when DefinedType::DEFINED_IVAR
         ivar_name = obj
-        current_frame._self.instance_variable_defined?(ivar_name)
+        if current_frame._self.instance_variable_defined?(ivar_name)
+          'instance-variable'
+        end
       when DefinedType::DEFINED_CONST
-        const_name = obj || current_nesting.last
-        context ||= Object
-        context.const_defined?(obj)
+        if current_nesting.any? { |scope| scope.const_defined?(obj, true) }
+          'constant'
+        end
       when DefinedType::DEFINED_GVAR
-        global_variables.include?(obj)
+        if global_variables.include?(obj)
+          'global-variable'
+        end
+      when DefinedType::DEFINED_FUNC
+        if context.respond_to?(obj, true)
+          'method'
+        end
+      when DefinedType::DEFINED_METHOD
+        if context.respond_to?(obj)
+          'method'
+        end
+      when DefinedType::DEFINED_CVAR
+        parent_frames = vm.frame_stack.frames_until(&:eval?)
+        parent_frames = vm.frame_stack.frames_until { |f| f.is_a?(TopFrame) } if parent_frames.empty?
+
+        if parent_frames.none? { |f| [ClassFrame, ModuleFrame, SClassFrame].include?(f.class) }
+          warn 'warning: class variable access from toplevel'
+        end
+
+        klass = current_frame._self
+        klass = klass.singleton_class unless klass.is_a?(Module)
+        if klass.class_variable_defined?(obj)
+          'class variable'
+        end
+      when DefinedType::DEFINED_YIELD
+        if current_frame.respond_to?(:block) && current_frame.block
+          'yield'
+        end
+      when DefinedType::DEFINED_ZSUPER
+        frame = vm.frame_stack.closest { |f| f.is_a?(MethodFrame) }
+        if frame.is_a?(MethodFrame)
+          if frame._self.method(frame.name).super_method
+            'super'
+          end
+        end
+      when DefinedType::DEFINED_REF
+        if __backref(obj)
+          'global-variable'
+        end
       else
-        binding.irb
+        raise "Unsupported definied? type #{defined_type}"
       end
 
     push(verdict)
@@ -777,6 +817,7 @@ class Executor
     arg = pop
     recv = pop
     push(recv =~ arg)
+    (current_frame.svars ||= {})[:backref] = Regexp.last_match
   end
 
   def execute_opt_aref_with((key, options, _flag))
@@ -1011,6 +1052,23 @@ class Executor
     end
   end
 
+  def __backref(type)
+    backref = __lep_svar_get(VM_SVAR_BACKREF)
+
+    if (type & 1).nonzero?
+      case (type >> 1).chr
+      when '&'  then backref && backref[0]
+      when '`'  then backref && backref.pre_match
+      when '\'' then backref && backref.post_match
+      when '+'  then backref && backref[-1]
+      else
+        raise "Unsupported backref #{(type >> 1).chr}"
+      end
+    else
+      backref && backref[type >> 1]
+    end
+  end
+
   def execute_getspecial((key, type))
     non_block_frame = vm.frame_stack.closest { |f| !f.is_a?(BlockFrame) }
 
@@ -1018,20 +1076,7 @@ class Executor
       if type == 0
         __lep_svar_get(key)
       else
-        backref = __lep_svar_get(VM_SVAR_BACKREF)
-
-        if (type & 1).nonzero?
-          case (type >> 1).chr
-          when '&'  then backref && backref[0]
-          when '`'  then backref && backref.pre_match
-          when '\'' then backref && backref.post_match
-          when '+'  then backref && $+
-          else
-            raise "Unsupported backref #{(type >> 1).chr}"
-          end
-        else
-          backref && backref[type >> 1]
-        end
+        __backref(type)
       end
 
     push(result)

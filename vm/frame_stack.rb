@@ -72,6 +72,12 @@ class FrameStack
     @stack.reverse_each.detect { |frame| block.call(frame) }
   end
 
+  def frames_until(&block)
+    result = []
+    @stack.reverse_each { |frame| r = block.call(frame); result << frame; break if r }
+    result
+  end
+
   def to_backtrace
     [
       *@stack.map { |frame| BacktraceEntry.new(frame) },
