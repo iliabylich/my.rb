@@ -61,10 +61,16 @@ class CLI
     options[:file_to_run] = ARGV.shift
 
     if options[:print_missing_insns]
+      ignored = [:execute_bitblt, :execute_answer]
+
       all = RubyVM::INSTRUCTION_NAMES.map { |insn| :"execute_#{insn}" }.grep_v(/execute_trace_/)
-      existing = Executor.instance_methods
+      all -= ignored
+
+      existing = Executor.instance_methods + [:execute_leave]
       existing &= all
+
       missing = all - existing
+
       puts "+#{existing.length} / -#{missing.length} / total: #{all.length}"
       puts missing
       exit(0)

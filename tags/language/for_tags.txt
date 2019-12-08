@@ -1,4 +1,2 @@
-fails:The for expression allows a class variable as an iterator name
-fails:The for expression allows a constant as an iterator name
 fails:The for expression breaks out of a loop upon 'break', returning nil
 fails:The for expression allows 'break' to have an argument which becomes the value of the for expression

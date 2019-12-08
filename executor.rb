@@ -313,6 +313,13 @@ class Executor
     push(value)
   end
 
+  def execute_setlocal((local_var_id, level))
+    value = pop
+    frame = level.times.inject(current_frame) { |f| f.parent_frame }
+    local = frame.locals.find(id: local_var_id)
+    local.set(value)
+  end
+
   def execute_getlocal_WC_0((local_var_id))
     local = current_frame.locals.find(id: local_var_id)
     value = local.get
@@ -702,6 +709,13 @@ class Executor
     klass.class_variable_set(name, value)
   end
 
+  def execute_getclassvariable((name))
+    klass = current_frame._self
+    klass = klass.class unless klass.is_a?(Class)
+    value = klass.class_variable_get(name)
+    push(value)
+  end
+
   module DefinedType
     DEFINED_NOT_DEFINED = 0
     DEFINED_NIL = 1
@@ -1008,5 +1022,19 @@ class Executor
       end
 
     push(result)
+  end
+
+  def execute_opt_or(_)
+    lhs = pop
+    rhs = pop
+    push(lhs | rhs)
+  end
+
+  def execute_opt_str_uminus((str, _, _))
+    push(-str)
+  end
+
+  def execute_opt_succ(_)
+    push(pop.succ)
   end
 end
