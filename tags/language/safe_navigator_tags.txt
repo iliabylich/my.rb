@@ -1,1 +1,0 @@
-fails:Safe navigator does not call the operator method lazily with an assignment operator

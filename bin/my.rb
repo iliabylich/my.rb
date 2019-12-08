@@ -124,9 +124,14 @@ require '/Users/ilya/.rvm/scripts/irbrc.rb'
     end
 
     def eval(code)
+      verbose = $VERBOSE
+      $VERBOSE = false
       iseq = RubyVM::InstructionSequence.compile(code).to_a
+      $VERBOSE = true
       iseq[9] = :eval
       VM.instance.execute(iseq, _self: self)
+    ensure
+      $VERBOSE = verbose
     end
   end
 end

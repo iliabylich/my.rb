@@ -63,11 +63,10 @@ class Executor
 
     if current_frame.eval? &&
        (options[:flag] & VM_CALL_VCALL).nonzero? &&
-       (parent = current_frame.parent_frame) &&
-       parent.locals.declared?(name: mid)
+       (local = current_frame.locals.find_if_declared(name: mid))
 
       # x = 1; eval("x") - x is a VCALL in eval, so maybe it's a local variable of the parent frame
-      result = parent.locals.find(name: mid).value
+      result = local.value
       push(result)
       return
     end
@@ -303,63 +302,57 @@ class Executor
     push(array)
   end
 
-  def execute_getlocal((local_var_id, level))
-    frame = level.times.inject(current_frame) { |f| f.parent_frame }
+  def nth_parent_frame(n)
+    n.times.inject(current_frame) { |f| f.parent_frame }
+  end
+
+  def __getlocal(local_var_id, frame)
     local = frame.locals.find(id: local_var_id)
     value = local.get
     if value.equal?(Locals::UNDEFINED)
       value = nil
     end
     push(value)
-  end
-
-  def execute_setlocal((local_var_id, level))
-    value = pop
-    frame = level.times.inject(current_frame) { |f| f.parent_frame }
-    local = frame.locals.find(id: local_var_id)
-    local.set(value)
   end
 
   def execute_getlocal_WC_0((local_var_id))
-    local = current_frame.locals.find(id: local_var_id)
-    value = local.get
-    if value.equal?(Locals::UNDEFINED)
-      value = nil
-    end
-    push(value)
+    __getlocal(local_var_id, current_frame)
   end
 
   def execute_getlocal_WC_1((local_var_id))
-    local = current_frame.parent_frame.locals.find(id: local_var_id)
-    value = local.get
-    if value.equal?(Locals::UNDEFINED)
-      value = nil
-    end
-    push(value)
+    __getlocal(local_var_id, current_frame.parent_frame)
+  end
+
+  def execute_getlocal((local_var_id, level))
+    __getlocal(local_var_id, nth_parent_frame(level))
+  end
+
+  def __setlocal(local_var_id, value, frame)
+    local =
+      if (existing_local = frame.locals.find_if_declared(id: local_var_id))
+        existing_local
+      elsif frame.equal?(current_frame)
+        frame.locals.declare(id: local_var_id)
+      else
+        raise VM::InternalError, 'locals are malformed'
+      end
+
+    local.set(value)
   end
 
   def execute_setlocal_WC_0((local_var_id))
     value = pop
-    locals = current_frame.locals
-
-    unless locals.declared?(id: local_var_id)
-      locals.declare(id: local_var_id)
-    end
-
-    local = locals.find(id: local_var_id)
-    local.set(value)
+    __setlocal(local_var_id, value, current_frame)
   end
 
   def execute_setlocal_WC_1((local_var_id))
     value = pop
-    locals = current_frame.parent_frame.locals
+    __setlocal(local_var_id, value, current_frame.parent_frame)
+  end
 
-    unless locals.declared?(id: local_var_id)
-      locals.declare(id: local_var_id)
-    end
-
-    local = locals.find(id: local_var_id)
-    local.set(value)
+  def execute_setlocal((local_var_id, level))
+    value = pop
+    __setlocal(local_var_id, value, nth_parent_frame(level))
   end
 
   def execute_checkkeyword((_unknown, kwoptarg_offset))

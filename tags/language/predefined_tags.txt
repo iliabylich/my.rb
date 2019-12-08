@@ -33,6 +33,8 @@ fails:Predefined global $! in ensure-protected bodies should not be cleared when
 fails:Predefined global $_ is set to the last line read by e.g. StringIO#gets
 fails:Predefined global $_ is set at the method-scoped level rather than block-scoped
 fails:Predefined global $_ can be assigned any value
+fails:Global variable $-v is an alias of $VERBOSE
+fails:Global variable $-w is an alias of $VERBOSE
 fails:The predefined global constant STDIN has the encodings set by #set_encoding
 fails:The predefined global constant STDIN retains the encoding set by #set_encoding when Encoding.default_external is changed
 fails:The predefined global constant STDOUT has the encodings set by #set_encoding

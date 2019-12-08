@@ -24,28 +24,32 @@ class Locals
       # unused args (like virtual attribute that holds mlhs value)
       # have have numeric names
       arg_name += 1 if arg_name.is_a?(Integer)
-      declare(name: arg_name, id: idx)
-      find(id: idx).set(Locals::UNDEFINED)
+      declare(name: arg_name, id: idx).set(Locals::UNDEFINED)
     end
   end
 
   def declared?(name: nil, id: nil)
-    @set.any? { |local| (!name.nil? && local.name == name) || (!id.nil? && local.id == id) }
+    !find_if_declared(name: name, id: id).nil?
   end
 
   def declare(name: nil, id: nil)
-    @set << Local.new(name: name, id: id, value: nil)
+    local = Local.new(name: name, id: id, value: nil)
+    @set << local
+    local
+  end
+
+  def find_if_declared(name: nil, id: nil)
+    if name
+      @set.detect { |var| var.name == name }
+    elsif id
+      @set.detect { |var| var.id == id }
+    else
+      raise NotImplementedError, "At least one of name:/id: is required"
+    end
   end
 
   def find(name: nil, id: nil)
-    result =
-      if name
-        @set.detect { |var| var.name == name }
-      elsif id
-        @set.detect { |var| var.id == id }
-      else
-        raise NotImplementedError, "At least one of name:/id: is required"
-      end
+    result = find_if_declared(name: name, id: id)
 
     if result.nil?
       raise VM::InternalError, "No local name=#{name.inspect}/id=#{id.inspect}"
