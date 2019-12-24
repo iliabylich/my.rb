@@ -1,5 +1,5 @@
-fails:The defined? keyword when called with a method name having a method call as a receiver returns nil if evaluating the receiver raises an exception
-fails:The defined? keyword for an expression with logical connectives does not propagate an exception raised by a method in a 'not' expression
+fails:The defined? keyword for an expression with logical connectives returns nil for an expression with '!' and an unset global variable
+fails:The defined? keyword for an expression with logical connectives returns nil for an expression with 'not' and an unset global variable
 fails:The defined? keyword for variables returns nil for a global variable that has not been read
 fails:The defined? keyword for variables returns nil for a global variable that has been read but not assigned to
 fails:The defined? keyword for variables when a String matches a Regexp returns 'global-variable' for $&
@@ -12,6 +12,24 @@ fails:The defined? keyword for variables when a Regexp matches a String returns 
 fails:The defined? keyword for variables when a Regexp matches a String returns 'global-variable' for $'
 fails:The defined? keyword for variables when a Regexp matches a String returns 'global-variable' for $+
 fails:The defined? keyword for variables when a Regexp matches a String returns 'global-variable' for the capture references
+fails:The defined? keyword for a scoped constant returns 'constant' when the scoped constant is defined
+fails:The defined? keyword for a scoped constant returns nil when a constant is defined on top-level but not on the module
+fails:The defined? keyword for a scoped constant returns 'constant' if the scoped-scoped constant is defined
+fails:The defined? keyword for a top-level scoped constant returns 'constant' when the scoped constant is defined
+fails:The defined? keyword for a top-level scoped constant returns 'constant' if the scoped-scoped constant is defined
+fails:The defined? keyword for a self-send method call scoped constant returns 'constant' if the constant is defined in the scope of the method's value
+fails:The defined? keyword for a self-send method call scoped constant returns 'constant' if all the constants in the scope chain are defined
+fails:The defined? keyword for a receiver method call scoped constant returns 'constant' if the constant is defined in the scope of the method's value
+fails:The defined? keyword for a receiver method call scoped constant returns 'constant' if all the constants in the scope chain are defined
+fails:The defined? keyword for a module method call scoped constant returns 'constant' if the constant scoped by the method's value is defined
+fails:The defined? keyword for a module method call scoped constant returns 'constant' if all the constants in the scope chain are defined
+fails:The defined? keyword for a module method call scoped constant returns 'constant' if all the constants in the receiver are defined
+fails:The defined? keyword for a module method call scoped constant returns 'constant' if all the constants in the receiver and scope chain are defined
+fails:The defined? keyword for a variable scoped constant returns 'constant' if the constant is defined in the scope of the instance variable
+fails:The defined? keyword for a variable scoped constant returns 'constant' if the constant is defined in the scope of the global variable
+fails:The defined? keyword for a variable scoped constant returns 'constant' if the constant is defined in the scope of the class variable
+fails:The defined? keyword for a variable scoped constant returns 'constant' if the constant is defined in the scope of the local variable
+fails:The defined? keyword for a self:: scoped constant returns 'constant' for a constant explicitly scoped to self:: when set
 fails:The defined? keyword for super returns nil when a superclass undef's the method
 fails:The defined? keyword for super for a method taking no arguments returns 'super' from a block when a superclass method exists
 fails:The defined? keyword for super for a method taking no arguments returns 'super' from a #define_method when a superclass method exists

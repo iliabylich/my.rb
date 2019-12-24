@@ -1,3 +1,0 @@
-fails:Operators ^ | are left-associative
-fails:Operators ? : has higher precedence than rescue
-fails:Operators rescue has higher precedence than =

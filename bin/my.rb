@@ -30,6 +30,16 @@ require 'irb/completion'
 require 'readline'
 require '/Users/ilya/.rvm/scripts/irbrc.rb'
 
+Object.send(:remove_const, :UncaughtThrowError)
+class UncaughtThrowError < ArgumentError
+  attr_reader :tag, :value
+
+  def initialize(tag, value)
+    @tag = tag
+    @value = value
+  end
+end
+
 [Kernel, Kernel.singleton_class].each do |mod|
   mod.module_eval do
     alias original_require require
@@ -123,49 +133,67 @@ require '/Users/ilya/.rvm/scripts/irbrc.rb'
       binding.irb
     end
 
-    def eval(code)
-      verbose = $VERBOSE
-      $VERBOSE = false
-      iseq = RubyVM::InstructionSequence.compile(code).to_a
-      $VERBOSE = true
-      iseq[9] = :eval
-      VM.instance.execute(iseq, _self: self)
-    ensure
-      $VERBOSE = verbose
+    if ENV['PATCH_EVAL']
+      def eval(code)
+        verbose = $VERBOSE
+        $VERBOSE = false
+        iseq = RubyVM::InstructionSequence.compile(code).to_a
+        $VERBOSE = true
+        iseq[9] = :eval
+        VM.instance.execute(iseq, _self: self)
+      ensure
+        $VERBOSE = verbose
+      end
+    end
+
+    def throw(tag, value = nil)
+      raise UncaughtThrowError.new(tag, value)
+    end
+
+    def catch(tag)
+      yield
+    rescue UncaughtThrowError => e
+      if e.tag == tag
+        return e.value
+      else
+        raise
+      end
     end
   end
 end
 
-class BasicObject
-  def instance_eval(code = nil, &block)
-    if code
-      iseq = ::RubyVM::InstructionSequence.compile(code).to_a
-      iseq[9] = :eval
-      ::VM.instance.execute(iseq, _self: self)
-    else
-      ::RubyRb::REAL_INSTANCE_EVAL.bind(self).call(&block)
-    end
-  end
-end
-
-class Module
-  def module_eval(code = nil, &block)
-    if code
-      iseq = ::RubyVM::InstructionSequence.compile(code).to_a
-      iseq[9] = :eval
-      ::VM.instance.execute(iseq, _self: self)
-    else
-      ::RubyRb::REAL_MODULE_EVAL.bind(self).call(&block)
+if ENV['PATCH_EVAL']
+  class BasicObject
+    def instance_eval(code = nil, &block)
+      if code
+        iseq = ::RubyVM::InstructionSequence.compile(code).to_a
+        iseq[9] = :eval
+        ::VM.instance.execute(iseq, _self: self)
+      else
+        ::RubyRb::REAL_INSTANCE_EVAL.bind(self).call(&block)
+      end
     end
   end
 
-  def class_eval(code = nil, &block)
-    if code
-      iseq = ::RubyVM::InstructionSequence.compile(code).to_a
-      iseq[9] = :eval
-      ::VM.instance.execute(iseq, _self: self)
-    else
-      ::RubyRb::REAL_CLASS_EVAL.bind(self).call(&block)
+  class Module
+    def module_eval(code = nil, &block)
+      if code
+        iseq = ::RubyVM::InstructionSequence.compile(code).to_a
+        iseq[9] = :eval
+        ::VM.instance.execute(iseq, _self: self)
+      else
+        ::RubyRb::REAL_MODULE_EVAL.bind(self).call(&block)
+      end
+    end
+
+    def class_eval(code = nil, &block)
+      if code
+        iseq = ::RubyVM::InstructionSequence.compile(code).to_a
+        iseq[9] = :eval
+        ::VM.instance.execute(iseq, _self: self)
+      else
+        ::RubyRb::REAL_CLASS_EVAL.bind(self).call(&block)
+      end
     end
   end
 end

@@ -17,3 +17,5 @@ fails:Module#private_constant marked constants in Object cannot be accessed usin
 fails:Module#private_constant marked constants in Object is not defined? using ::Const form
 fails:Module#private_constant marked constants NameError by #private_constant has :receiver and :name attributes
 fails:Module#private_constant marked constants NameError by #private_constant has the defined class as the :name attribute
+fails:Module#public_constant marked constants in a module is defined? with A::B form
+fails:Module#public_constant marked constants in a class is defined? with A::B form

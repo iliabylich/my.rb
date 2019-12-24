@@ -150,6 +150,7 @@ class Executor
       if block_iseq
         original_block_frame = self.current_frame
         proc do |*args, &block|
+
           VM.instance.execute(
             block_iseq,
               block_args: args,
@@ -240,7 +241,7 @@ class Executor
     when 3
       push(:VM_SPECIAL_OBJECT_CONST_BASE)
     else
-      raise VM::InternalError, 'dead'
+      raise VM::InternalError, "unknown specialobject type #{type}"
     end
   end
 
@@ -1004,22 +1005,12 @@ class Executor
     if state != 0
       # throw start
       case state
-      when 1
-        # return
+      when RUBY_TAG_RETURN
         raise VM::ReturnError, throw_obj
-      when 3
-        # next inside rescue/ensure, inside pop_frame,
-        # so current_frame is about to die
-
-        frame = current_frame
-
-        until frame.can_do_next?
-          frame.exit!(:__unused)
-          frame = frame.parent_frame
-        end
-
-        frame.returning = throw_obj
-        frame.exit!(throw_obj)
+      when RUBY_TAG_BREAK
+        raise VM::BreakError, throw_obj
+      when RUBY_TAG_NEXT
+        raise VM::NextError, throw_obj
       else
         binding.irb
       end
@@ -1099,8 +1090,8 @@ class Executor
   end
 
   def execute_opt_or(_)
-    lhs = pop
     rhs = pop
+    lhs = pop
     push(lhs | rhs)
   end
 

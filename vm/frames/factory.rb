@@ -26,14 +26,18 @@ class FrameClass
 
       attr_reader :svars
 
+      attr_reader :enabled_rescue_handlers
+      attr_reader :enabled_ensure_handlers
+
       def pretty_name
         raise VM::InternalError, "#{self.class}#pretty_name is missing"
       end
 
-      def can_return?;  false; end
-      def can_do_next?; false; end
-      def can_yield?;   false; end
-      def eval?;        false; end
+      def can_return?;    false; end
+      def can_do_next?;   false; end
+      def can_yield?;     false; end
+      def can_do_break?;  false; end
+      def eval?;          false; end
 
       def prepare; end
 
@@ -48,6 +52,8 @@ class FrameClass
           @labels_to_skip = []
           @in_module_function_section = false
           @svars = {}
+          @enabled_rescue_handlers = []
+          @enabled_ensure_handlers = []
         }
 
         instance.file = iseq.file

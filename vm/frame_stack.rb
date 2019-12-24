@@ -18,6 +18,7 @@ class FrameStack
     if @stack.size > 100
       raise '(vm) stack overflow'
     end
+    frame
   end
 
   def push_top(**args)
@@ -78,7 +79,15 @@ class FrameStack
     result
   end
 
+  def empty?
+    @stack.empty?
+  end
+
   def to_backtrace
+    if ENV['DISABLE_TRACES']
+      return []
+    end
+
     [
       *@stack.map { |frame| BacktraceEntry.new(frame) },
       "... MRI backtrace...",

@@ -165,6 +165,7 @@ RSpec.describe 'VM' do
       ensure
         p 3
       end
+      p 4
     RUBY
 
     assert_evaluates_like_mri(<<-RUBY)

@@ -14,10 +14,7 @@ fails:A block yielded a single Array when non-symbol keys are in a keyword argum
 fails:A block yielded a single Object calls #to_ary on the object when taking multiple arguments
 fails:A block yielded a single Object receives the object if #to_ary returns nil
 fails:A block yielded a single Object raises a TypeError if #to_ary does not return an Array
-fails:A block taking zero arguments may include a rescue clause
-fails:A block taking || arguments may include a rescue clause
 fails:A block taking |a| arguments assigns the first value yielded to the argument
-fails:A block taking |a| arguments may include a rescue clause
 fails:A block taking |a, b| arguments destructures a splatted Array
 fails:A block taking |a, b| arguments calls #to_ary to convert a single yielded object to an Array
 fails:A block taking |a, b| arguments raises a TypeError if #to_ary does not return an Array

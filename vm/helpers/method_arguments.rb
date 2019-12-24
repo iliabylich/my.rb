@@ -61,7 +61,7 @@ class MethodArguments
 
     opt_info.each do |label|
       arg_name = arg_names.shift
-      next if values.none? || values.length < post_num
+      next if values.empty? || values.length < post_num
       arg_value = values.shift
       locals.find(name: arg_name).set(arg_value)
       VM.instance.__log { "opt: #{arg_name} = #{arg_value}" }

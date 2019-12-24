@@ -19,23 +19,6 @@ fails:Predefined global $+ captures the last non nil capture
 fails:Predefined global $+ sets the encoding to the encoding of the source String
 fails:Predefined globals $1..N are equivalent to $~[N]
 fails:Predefined globals $1..N sets the encoding to the encoding of the source String
-fails:Predefined global $! should be set to the value of $! before the begin after a successful rescue
-fails:Predefined global $! should be set to the value of $! before the begin after a rescue which returns
-fails:Predefined global $! should be set to the value of $! before the begin after a successful rescue within an ensure
 fails:Predefined global $! should be set to the new exception after a throwing rescue
-fails:Predefined global $! in bodies without ensure should be cleared when an exception is rescued
-fails:Predefined global $! in bodies without ensure should be cleared when an exception is rescued even when a non-local return is present
 fails:Predefined global $! in bodies without ensure should not be cleared when an exception is not rescued
 fails:Predefined global $! in bodies without ensure should not be cleared when an exception is rescued and rethrown
-fails:Predefined global $! in ensure-protected bodies should be cleared when an exception is rescued
-fails:Predefined global $! in ensure-protected bodies should not be cleared when an exception is not rescued
-fails:Predefined global $! in ensure-protected bodies should not be cleared when an exception is rescued and rethrown
-fails:Predefined global $_ is set to the last line read by e.g. StringIO#gets
-fails:Predefined global $_ is set at the method-scoped level rather than block-scoped
-fails:Predefined global $_ can be assigned any value
-fails:Global variable $-v is an alias of $VERBOSE
-fails:Global variable $-w is an alias of $VERBOSE
-fails:The predefined global constant STDIN has the encodings set by #set_encoding
-fails:The predefined global constant STDIN retains the encoding set by #set_encoding when Encoding.default_external is changed
-fails:The predefined global constant STDOUT has the encodings set by #set_encoding
-fails:The predefined global constant STDERR has the encodings set by #set_encoding

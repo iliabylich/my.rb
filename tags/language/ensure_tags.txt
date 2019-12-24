@@ -1,13 +1,14 @@
-fails:An ensure block inside a begin block is executed when an exception is raised and rescued in it's corresponding begin block
+fails:An ensure block inside a begin block is executed when an exception is raised in it's corresponding begin block
 fails:An ensure block inside a begin block is executed even when a symbol is thrown in it's corresponding begin block
 fails:An ensure block inside a begin block sets exception cause if raises exception in block and in ensure
-fails:The value of an ensure expression, when an exception is rescued, is the value of the rescuing block
+fails:An ensure block inside a method is executed when an exception is raised in the method
 fails:An ensure block inside a method is executed even when a symbol is thrown in the method
 fails:An ensure block inside a method has an impact on the method's explicit return value from rescue if returns explicitly
-fails:An ensure block inside a method has no impact on the method's explicit return value from rescue if returns implicitly
 fails:An ensure block inside a method suppresses exception raised in method if returns value explicitly
 fails:An ensure block inside a method suppresses exception raised in rescue if returns value explicitly
 fails:An ensure block inside a method overrides exception raised in rescue if raises exception itself
 fails:An ensure block inside a method suppresses exception raised in method if raises exception itself
+fails:An ensure block inside a class is executed when an exception is raised
 fails:An ensure block inside a class is executed even when a symbol is thrown
+fails:An ensure block inside 'do end' block is executed when an exception is raised in it's corresponding begin block
 fails:An ensure block inside 'do end' block is executed even when a symbol is thrown in it's corresponding begin block

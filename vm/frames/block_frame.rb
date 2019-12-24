@@ -43,4 +43,8 @@ BlockFrame = FrameClass.new do
   def can_do_next?
     true
   end
+
+  def can_do_break?
+    true
+  end
 end

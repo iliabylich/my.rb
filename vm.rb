@@ -16,11 +16,15 @@ class VM
     end
   end
 
-  class MessageError  < InternalError
+  class LongJumpError  < InternalError
     attr_reader :value
 
     def initialize(value)
       @value = value
+    end
+
+    def can_be_handled_by?(frame)
+      raise InternalError, 'Not implemented'
     end
 
     def message
@@ -28,20 +32,30 @@ class VM
     end
   end
 
-  class ReturnError < MessageError; end
+  class ReturnError < LongJumpError
+    def can_be_handled_by?(frame)
+      frame.can_return?
+    end
+  end
+  class NextError < LongJumpError
+    def can_be_handled_by?(frame)
+      frame.can_do_next?
+    end
+  end
+  class BreakError < LongJumpError
+    def can_be_handled_by?(frame)
+      frame.can_do_break?
+    end
+  end
+  class PropagateError < InternalError
+    attr_reader :err
+    def initialize(err)
+      @err = err
+    end
+  end
 
   def initialize
     @frame_stack = FrameStack.new
-    # @frame_stack.singleton_class.prepend(Module.new {
-    #   def push(v)
-    #     super(v)
-    #     puts "frame.push [#{size}] #{stack.last(3).map(&:pretty_name).join(' -> ')}"
-    #   end
-    #   def pop
-    #     super()
-    #     puts "frame.pop  [#{size}] #{stack.last(3).map(&:pretty_name).join(' -> ')}"
-    #   end
-    # })
     @executor = Executor.new
 
     @jump = nil
@@ -56,43 +70,64 @@ class VM
 
     depth_before = frame_stack.size
 
+    before = frame_stack.size
     push_frame(iseq, **payload)
+    pushed_frame = current_frame
 
     if (before_eval = payload[:before_eval]); before_eval.call; end
-
-    current_frame.prepare
 
     __log { "\n\n--------- BEGIN #{current_frame.header} ---------" }
 
     begin
+      current_frame.prepare
       evaluate_last_frame
-    rescue ReturnError => e
-      raise unless current_frame.can_return?
-
-      frame = current_frame
-
-      until frame.can_return?
-        frame.exit!(:__unused)
-        frame = frame.parent_frame
+    rescue ReturnError, NextError => e
+      if e.can_be_handled_by?(current_frame)
+        # swallow
+        current_frame.returning = e.value
+      else
+        assert_frame(pushed_frame)
+        pop_frame(reason: "longjmp #{e}")
+        raise
       end
-
-      frame.exit!(e.value)
-    end
-
-    __log { "\n\n--------- END   #{current_frame.header} ---------" }
-  ensure
-    result = pop_frame
-
-    if $!
+    rescue BreakError => e
+      if e.can_be_handled_by?(current_frame)
+        if current_frame.is_lambda
+          current_frame.returning = e.value
+        else
+          assert_frame(pushed_frame)
+          pop_frame(reason: "propagating block return #{e}")
+          raise ReturnError, e.value
+        end
+      else
+        assert_frame(pushed_frame)
+        pop_frame(reason: "longjmp #{e}")
+        raise
+      end
+    rescue Exception => e
+      assert_frame(pushed_frame)
+      pop_frame(reason: "propagating #{e}")
       raise
     end
 
-    if @frame_stack.size != depth_before
-      @frame_stack.pop while @frame_stack.size > depth_before
-      raise InternalError, 'frame stack is inconsistent'
+    __log { "\n\n--------- END   #{current_frame.header} ---------" }
+
+    frame_to_pop = current_frame
+    if !pushed_frame.equal?(frame_to_pop)
+      raise InternalError, 'must pop what was pushed'
     end
 
-    return result
+    pop_frame(reason: "fully evaluated, returning")
+  end
+
+  def assert_frame(expected_frame)
+    if !expected_frame.equal?(current_frame)
+      raise InternalError, <<-HERE
+        must pop what was pushed
+        Expected: #{expected_frame.header}
+        Got: #{current_frame.header}
+      HERE
+    end
   end
 
   def push_frame(iseq, **payload)
@@ -153,7 +188,8 @@ class VM
       @frame_stack.push_rescue(
         iseq: iseq,
         parent_frame: current_frame,
-        caught: payload[:caught]
+        caught: payload[:caught],
+        exit_to: payload[:exit_to]
       )
     when :ensure
       @frame_stack.push_ensure(
@@ -163,37 +199,22 @@ class VM
     else
       binding.irb
     end
+    __log { "Pushing frame #{current_frame.header}" }
+
   end
 
-  def pop_frame
+  def pop_frame(reason: 'unknown')
     if @frame_stack.size == 0
-      expected_size = 1000
       raise InternalError, 'no frame to pop'
     end
 
-    expected_size = @frame_stack.size - 1
-
-    error_to_reraise = nil
-
-    if (error = current_frame.current_error)
-      if (rescue_iseq = current_frame.iseq.handler(:rescue))
-        execute(rescue_iseq, caught: error)
-      else
-        error_to_reraise = error
-      end
-
-      if (ensure_iseq = current_frame.iseq.handler(:ensure))
-        execute(ensure_iseq)
-      end
+    frame = @frame_stack.pop
+    __log { "Destroying frame #{frame.header} [#{reason}]" }
+    if frame.is_a?(RescueFrame)
+      __log { "Jumping into post-rescue" }
+      jump(frame.exit_to)
     end
-
-    current_frame.returning
-  ensure
-    while @frame_stack.size > expected_size
-      @frame_stack.pop
-    end
-
-    raise error_to_reraise if error_to_reraise
+    frame.returning
   end
 
   def evaluate_last_frame
@@ -208,7 +229,8 @@ class VM
           break
         else
           # done with intermediate iseq
-          pop_frame
+          raise InternalError, "unexpected"
+          pop_frame(reason: 'dead')
           next
         end
       end
@@ -232,7 +254,7 @@ class VM
     return unless debug
     return if debug_focus_on && !focused?
 
-    if debug_print_stack
+    if debug_print_stack && current_frame
       $debug.puts "Stack: #{current_frame.stack.inspect}"
     end
 
@@ -258,26 +280,39 @@ class VM
   end
 
   def clear_current_iseq
-    current_iseq.insns.each { |insn| report_skipped_insn(insn) }
+    current_iseq.insns.each { |insn| skip_insn(insn) }
     current_iseq.insns.clear
   end
 
   def execute_insn(insn)
     case insn
     when Integer
+      __log { insn }
       @last_numeric_insn = insn
     when :RUBY_EVENT_LINE
+      __log { insn }
       current_frame.line = @last_numeric_insn
       @last_numeric_insn = nil
     when [:leave]
+      if current_stack.empty?
+        __log { "#{insn.inspect}" }
+        raise InternalError, <<~MSG
+          Stack is empty, cannot to [:leave].
+          current_frame is #{current_frame.header}
+          current_frame.returning is #{current_frame.returning}
+        MSG
+      end
       current_frame.returning = returning = current_stack.pop
       __log { "#{insn.inspect} (returning #{returning.inspect})" }
       clear_current_iseq
     when Array
       execute_array_insn(insn)
     when :RUBY_EVENT_END, :RUBY_EVENT_CLASS, :RUBY_EVENT_RETURN, :RUBY_EVENT_B_CALL, :RUBY_EVENT_B_RETURN, :RUBY_EVENT_CALL
+      __log { insn }
       # ignore
     when /label_\d+/
+      __log { insn }
+      on_label(insn)
       # ignore
     else
       binding.irb
@@ -298,14 +333,36 @@ class VM
     yield
   rescue InternalError => e
     raise
+  rescue SystemExit => e
+    raise
   rescue Exception => e
-    # error from the inerpreted code
-    clear_current_iseq
-    current_frame.current_error = e
+    handle_error(e)
   end
 
-  def report_skipped_insn(insn)
+  def handle_error(error)
+    if current_frame.enabled_ensure_handlers.length > 1
+      puts "current_frame.enabled_ensure_handlers > 1"
+      Kernel.exit(0)
+    end
+
+    if (rescue_handler = current_frame.enabled_rescue_handlers[0])
+      result = execute(rescue_handler.iseq, caught: error, exit_to: rescue_handler.exit_label)
+      current_stack.push(result)
+    else
+      # p "unwrapping stack (pop #{current_frame.header})"
+      raise
+
+    #   if (ensure_iseq = current_frame.iseq.handler(:ensure))
+    #     execute(ensure_iseq)
+    #   end
+    end
+  end
+
+  def skip_insn(insn)
     __log { "... #{pretty_insn(insn).inspect}" }
+    if insn.is_a?(Symbol) && insn =~ /label_\d+/
+      on_label(insn)
+    end
   end
 
   def current_frame; frame_stack.top; end
@@ -338,9 +395,24 @@ class VM
       end
 
       break if insns[0] == label
-      report_skipped_insn(insns.shift)
+      skip_insn(insns.shift)
     end
 
-    report_skipped_insn(insns.shift) # shift the label itself
+    skip_insn(insns.shift) # shift the label itself
+  end
+
+  def on_label(label)
+    {
+      current_iseq.rescue_handlers => current_frame.enabled_rescue_handlers,
+      current_iseq.ensure_handlers => current_frame.enabled_ensure_handlers,
+    }.each do |all_handlers, enabled_handlers|
+      all_handlers
+        .select { |handler| handler.begin_label == label }
+        .each { |handler| enabled_handlers << handler }
+
+      all_handlers
+        .select { |handler| handler.end_label == label }
+        .each { |handler| enabled_handlers.delete(handler) }
+    end
   end
 end
