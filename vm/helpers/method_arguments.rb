@@ -71,15 +71,18 @@ class MethodArguments
     if rest_start
       arg_name = arg_names.shift
       arg_name += 1 if arg_name.is_a?(Integer)
-      arg_value = values[0..-(post_num + 1)]
-      locals.find(name: arg_name).set(arg_value)
-      VM.instance.__log { "rest: #{arg_name} = #{arg_value.inspect}" }
 
       if post_num > 0
-        @values = values[post_num..-1] || []
+        # reserve <post_num> arguments
+        arg_value = values[0..-(post_num + 1)]
+        @values = values.last(post_num)
       else
+        arg_value = values
         @values = []
       end
+
+      locals.find(name: arg_name).set(arg_value)
+      VM.instance.__log { "rest: #{arg_name} = #{arg_value.inspect}" }
     end
 
     post_num.times do

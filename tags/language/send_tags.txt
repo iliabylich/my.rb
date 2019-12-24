@@ -1,7 +1,4 @@
 fails:Invoking a private getter method does not permit self as a receiver
-fails:Invoking a method accepts final explicit literal Hash arguments after the splat
-fails:Invoking a method accepts final implicit literal Hash arguments after the splat
-fails:Invoking a method accepts final Hash arguments after the splat
 fails:Invoking a method expands the Array elements from the splat after executing the arguments and block if no other arguments follow the splat
 fails:Invoking a method with optional argument(s), expands an array to arguments grouped in parentheses
 fails:Invoking a method with required args after the rest arguments binds the required arguments first
