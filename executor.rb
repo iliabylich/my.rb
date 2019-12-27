@@ -528,8 +528,8 @@ class Executor
     elsif value == nil
       result = value.to_a
     else
-      if value.respond_to?(:to_a, true)
-        result = value.send(:to_a)
+      if __respond_to?(value, :to_a, true)
+        result = value.__send__(:to_a)
         if result == nil
           result = [value]
         elsif !result.is_a?(Array)

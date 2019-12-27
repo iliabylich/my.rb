@@ -1,5 +1,6 @@
 fails:A method assigns local variables from method parameters for definition 'def m(a:) a end'
-fails:A method assigns local variables from method parameters for definition 'def m(a, b: 1) [a, b] end'
+fails:A method assigns local variables from method parameters for definition 'def m(**) end'
+fails:A method assigns local variables from method parameters for definition 'def m(**k) k end'
 fails:A method assigns local variables from method parameters for definition 'def m(a, **) a end'
 fails:A method assigns local variables from method parameters for definition 'def m(a, **k) [a, k] end'
 fails:A method assigns local variables from method parameters for definition 'def m(a=1, b) [a, b] end'
@@ -14,6 +15,9 @@ fails:"A method assigns local variables from method parameters for definition \n
 fails:A method assigns local variables from method parameters for definition 'def m(a=1, b:) [a, b] end'
 fails:A method assigns local variables from method parameters for definition 'def m(a=1, b: 2) [a, b] end'
 fails:A method assigns local variables from method parameters for definition 'def m(a=1, **) a end'
+fails:A method assigns local variables from method parameters for definition 'def m(a=1, **k) [a, k] end'
+fails:A method assigns local variables from method parameters for definition 'def m(*, a) a end'
+fails:A method assigns local variables from method parameters for definition 'def m(*a, b) [a, b] end'
 fails:A method assigns local variables from method parameters for definition 'def m(*a, b:) [a, b] end'
 fails:A method assigns local variables from method parameters for definition 'def m(*a, b: 1) [a, b] end'
 fails:A method assigns local variables from method parameters for definition 'def m(*, **) end'
@@ -23,8 +27,3 @@ fails:A method assigns local variables from method parameters for definition 'de
 fails:A method assigns local variables from method parameters for definition 'def m(*a, **k) [a, k] end'
 fails:A method assigns local variables from method parameters for definition 'def m(a:, b:) [a, b] end'
 fails:A method assigns local variables from method parameters for definition 'def m(a:, b: 1) [a, b] end'
-fails:A method assigns local variables from method parameters for definition 'def m(a:, **) a end'
-fails:A method assigns local variables from method parameters for definition 'def m(a:, **k) [a, k] end'
-fails:"A method assigns local variables from method parameters for definition \n    def m(a, b=1, *c, d, e:, f: 2, g:, **k, &l)\n      [a, b, c, d, e, f, g, k, l]\n    end"
-fails:"A method assigns local variables from method parameters for definition \n    def m(a, b = nil, c = nil, d, e: nil, **f)\n      [a, b, c, d, e, f]\n    end"
-fails:A method assigns keyword arguments from a passed Hash without modifying it for definition 'def m(a: nil); a; end'

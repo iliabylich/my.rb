@@ -71,7 +71,14 @@ class VM
     depth_before = frame_stack.size
 
     before = frame_stack.size
-    push_frame(iseq, **payload)
+
+    begin
+      push_frame(iseq, **payload)
+    rescue Exception => e
+      pop_frame(reason: "propagating error during push_frame #{e}")
+      raise
+    end
+
     pushed_frame = current_frame
 
     if (before_eval = payload[:before_eval]); before_eval.call; end
