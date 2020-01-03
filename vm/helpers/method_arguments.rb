@@ -36,7 +36,12 @@ class MethodArguments
     end
 
     if kw.respond_to?(:to_hash)
-      kw = values[values.length - 1] = kw.to_hash
+      kw_to_hash = kw.to_hash
+      if kw_to_hash.is_a?(Hash)
+        kw = values[values.length - 1] = kw_to_hash
+      elsif !kw_to_hash.nil?
+        raise TypeError, "can't convert #{kw.class} to Hash (#{kw.class}#to_hash gives #{kw_to_hash.class})"
+      end
     end
 
     if kw.is_a?(Hash)
@@ -55,10 +60,6 @@ class MethodArguments
         if kw.key?(kwarg.name)
           value = kw.delete(kwarg.name)
           __kw_initializers << [:kwreq, name, value]
-          # -> {
-          #   locals.find(name: name).set(value)
-          #   VM.instance.__log { "kwreq: #{name} = #{value.inspect}" }
-          # }
         else
           raise ArgumentError, "missing keyword #{name.inspect}"
         end
@@ -69,17 +70,9 @@ class MethodArguments
           value = kwarg.default
         end
         __kw_initializers << [:kwopt, name, value]
-        # -> {
-        #   locals.find(name: name).set(value)
-        #   VM.instance.__log { "kwopt: #{name} = #{value.inspect}" }
-        # }
       when CategorizedArguments::DynamicKwOpt
         if kw.is_a?(Hash) && kw.key?(name)
           value = kw.delete(name)
-          # -> {
-          #   locals.find(name: name).set(value)
-          #   VM.instance.__log { "kwopt: #{name} = #{value.inspect}" }
-          # }
           __kw_initializers << [:kwopt, name, value]
         else
           # complex default value,
@@ -102,8 +95,6 @@ class MethodArguments
       kwrest_names.each do |name|
         next if name.nil?
         __kw_initializers << [:kwrest, name, value]
-        # locals.find(name: name).set(value)
-        # VM.instance.__log { "kwrest(#{name}): #{value.inspect}" }
       end
     end
 
@@ -131,7 +122,7 @@ class MethodArguments
 
     # Rest positional argument
     if (name = args.rest)
-      value = values.first(values.length - args.post.length)
+      value = values.first([values.length - args.post.length, 0].max)
       @values = values.last(args.post.length)
 
       locals.find(name: name).set(value)
@@ -140,7 +131,7 @@ class MethodArguments
 
     # Required post positional arguments
     args.post.each do |name|
-      if values.empty?
+      if arity_check && values.empty?
         raise ArgumentError, 'Broken arguments, cannot extract required argument'
       end
 
@@ -157,16 +148,5 @@ class MethodArguments
     if arity_check && values.any?
       raise ArgumentError, 'wrong number of arguments (too many)'
     end
-
-    # if has_kw && kw.is_a?(Hash) && kw.any?
-    #   extra_kw = kw.keys.grep(Symbol)
-    #   if reusing_kw
-    #     if extra_kw.any?
-    #       raise ArgumentError, "unknown keywords: #{extra_kw.join(', ')}"
-    #     end
-    #   else
-    #     binding.irb
-    #   end
-    # end
   end
 end

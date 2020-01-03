@@ -12,16 +12,28 @@ BlockFrame = FrameClass.new do
 
     @block = block
     @parent_frame = parent_frame
-
-    if arg_values.is_a?(Array) && arg_values.length == 1 && arg_values[0].is_a?(Array) && !iseq.args_info[:ambiguous_param0]
-      arg_values = arg_values[0]
-    end
-
     @arg_values = arg_values
   end
 
   def prepare
-    values = arg_values
+    if expand_single_array_argument?
+      arg = @arg_values[0]
+
+      if arg.is_a?(Array)
+        values = arg
+      else
+        case (to_ary = arg.to_ary)
+        when nil
+          values = [arg]
+        when Array
+          values = to_ary
+        else
+          raise TypeError, "can't convert #{arg.class} to Array (#{arg.class}#to_ary gives #{to_ary.class})"
+        end
+      end
+    else
+      values = @arg_values
+    end
 
     MethodArguments.new(
       iseq: iseq,
@@ -42,6 +54,19 @@ BlockFrame = FrameClass.new do
   end
 
   def can_do_break?
+    true
+  end
+
+  private
+
+  def expand_single_array_argument?
+    return false if iseq.args_info[:ambiguous_param0]
+    return false if arg_values.length != 1
+    first_element = arg_values[0]
+    return false if !first_element.is_a?(Array) && !first_element.respond_to?(:to_ary)
+    lead_num = iseq.args_info[:lead_num] || 0
+    opt      = iseq.args_info[:opt] || []
+    return false if lead_num == 0 && opt.empty?
     true
   end
 end

@@ -1,26 +1,9 @@
-fails:A block yielded a single Array assigns the Array to a single rest argument
-fails:A block yielded a single Array assigns nil to unassigned required arguments
-fails:A block yielded a single Array assigns elements to post arguments
-fails:A block yielded a single Array assigns the last element to a non-keyword argument if #to_hash returns nil
-fails:A block yielded a single Array raises a TypeError if #to_hash does not return a Hash
-fails:A block yielded a single Object calls #to_ary on the object when taking multiple arguments
-fails:A block yielded a single Object receives the object if #to_ary returns nil
-fails:A block yielded a single Object raises a TypeError if #to_ary does not return an Array
 fails:A block allows to define a block variable with the same name as the enclosing block
 fails:A block does not capture a local when the block argument has the same name
 fails:A block taking |a| arguments assigns the first value yielded to the argument
 fails:A block taking |a, b| arguments destructures a splatted Array
-fails:A block taking |a, b| arguments calls #to_ary to convert a single yielded object to an Array
-fails:A block taking |a, b| arguments raises a TypeError if #to_ary does not return an Array
-fails:A block taking |a, b| arguments raises the original exception if #to_ary raises an exception
 fails:A block taking |a, *b| arguments destructures a splatted Array
-fails:A block taking |a, *b| arguments calls #to_ary to convert a single yielded object to an Array
-fails:A block taking |a, *b| arguments raises a TypeError if #to_ary does not return an Array
-fails:A block taking |*a| arguments assigns '[[]]' to the argument when passed an empty Array
-fails:A block taking |*a| arguments assigns a single Array value passed to the argument by wrapping it in an Array
-fails:A block taking |*a| arguments does not call #to_ary if the single yielded object is an Array
-fails:A block taking |a, | arguments calls #to_ary to convert a single yielded object to an Array
-fails:A block taking |a, | arguments raises a TypeError if #to_ary does not return an Array
-fails:A block taking |(a, b), c| arguments calls #to_ary to convert a single yielded object to an Array
+fails:A block taking |*a| arguments assigns all the values passed to the argument as an Array
+fails:A block taking |*a, b:| merges the hash into the splatted array
 fails:A block arguments with _ extracts arguments with _
 fails:A block arguments with _ assigns the first variable named

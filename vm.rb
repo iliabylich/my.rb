@@ -73,10 +73,11 @@ class VM
     before = frame_stack.size
 
     begin
-      push_frame(iseq, **payload)
+      pushed_frame = push_frame(iseq, **payload)
     rescue Exception => e
-      pop_frame(reason: "propagating error during push_frame #{e}")
-      raise
+      puts e
+      puts "Errors inside push_frame are not allowed"
+      Kernel.exit(1)
     end
 
     pushed_frame = current_frame
