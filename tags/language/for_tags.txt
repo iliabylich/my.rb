@@ -1,2 +1,1 @@
-fails:The for expression returns expr
 fails:The for expression allows 'break' to have an argument which becomes the value of the for expression

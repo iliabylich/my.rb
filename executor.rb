@@ -197,6 +197,7 @@ class Executor
       end
     end
 
+
     if (options[:flag] & VM_CALL_ARGS_SPLAT).nonzero? && kwarg_names.nil?
       *head, tail = args
       args = [*head, *tail]

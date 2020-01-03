@@ -1,17 +1,3 @@
-fails:Hash literal {} should return an empty hash
-fails:Hash literal {} should return a new hash populated with the given elements
 fails:Hash literal freezes string keys on initialization
-fails:Hash literal checks duplicated keys on initialization
-fails:Hash literal accepts a hanging comma
-fails:Hash literal recognizes '=' at the end of the key
-fails:Hash literal constructs a new hash with the given elements
-fails:Hash literal ignores a hanging comma
-fails:Hash literal accepts mixed 'key: value' and 'key => value' syntax
-fails:Hash literal accepts mixed 'key: value', 'key => value' and '"key"': value' syntax
-fails:Hash literal expands an '**{}' element into the containing Hash literal initialization
-fails:Hash literal expands an '**obj' element into the containing Hash literal initialization
-fails:Hash literal expands a BasicObject using ** into the containing Hash literal initialization
-fails:Hash literal expands an '**{}' element with the last key/value pair taking precedence
-fails:Hash literal merges multiple nested '**obj' in Hash literals
-fails:Hash literal calls #to_hash to expand an '**obj' element
 fails:Hash literal raises a TypeError if any splatted elements keys are not symbols
+fails:Hash literal raises a TypeError if #to_hash does not return a Hash

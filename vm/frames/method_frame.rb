@@ -17,14 +17,11 @@ MethodFrame = FrameClass.new do
   def prepare
     values = arg_values
 
-    if iseq.args_info[:block_start]
-      values << block
-    end
-
     MethodArguments.new(
       iseq: iseq,
       values: values,
-      locals: locals
+      locals: locals,
+      block: iseq.args_info[:block_start] ? block : nil
     ).extract(arity_check: true)
 
     @kwoptarg_ids = (iseq.args_info[:keyword] || []).grep(Array).map { |name,| locals.find(name: name).id }
