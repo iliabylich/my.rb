@@ -11,8 +11,9 @@ class RubyRb
   REAL_CLASS_EVAL = Module.instance_method(:class_eval)
   REAL_KERNEL_LAMBDA = Kernel.instance_method(:lambda)
 
-  def self.require(file)
-    iseq = RubyVM::InstructionSequence.compile_file(file)
+  def self.require(absolute_filepath:, required_filepath:)
+    code = File.read(absolute_filepath)
+    iseq = RubyVM::InstructionSequence.compile(code, absolute_filepath, required_filepath, 1)
     run_instruction(iseq)
   end
 
@@ -47,7 +48,7 @@ end
     def require(filepath)
       ['.rb', '.bundle'].each do |ext|
         filepath_with_ext = filepath.end_with?(ext) ? filepath : filepath + ext
-        candidates = ['/', *$LOAD_PATH].map { |dir| File.join(dir, filepath_with_ext) }
+        candidates = ['/', *$LOAD_PATH].map { |dir| File.expand_path(File.join(dir, filepath_with_ext)) }
         resolved = candidates.detect { |f| File.exist?(f) }
 
         if resolved
@@ -57,7 +58,7 @@ end
           elsif File.extname(resolved) == '.rb'
             $debug.puts "require #{resolved}"
             $LOADED_FEATURES << resolved
-            RubyRb.require(resolved)
+            RubyRb.require(absolute_filepath: resolved, required_filepath: filepath)
             return true
           else
             # .bundle or .so, we have to load it via ruby
@@ -75,16 +76,16 @@ end
 
     alias original_load load
 
-    def load(filepath)
+    def load(filepath, wrap = false)
       ['.rb', '.bundle', ''].each do |ext|
         filepath_with_ext = filepath.end_with?(ext) ? filepath : filepath + ext
-        candidates = ['/', *$LOAD_PATH].map { |dir| File.join(dir, filepath_with_ext) }
+        candidates = ['/', *$LOAD_PATH].map { |dir| File.expand_path(File.join(dir, filepath_with_ext)) }
         resolved = candidates.detect { |f| File.exist?(f) }
 
         if resolved
           if ['.rb', '.mspec'].include?(File.extname(resolved))
             $debug.puts "load #{resolved}"
-            RubyRb.require(resolved)
+            RubyRb.require(absolute_filepath: resolved, required_filepath: filepath)
             $LOADED_FEATURES << resolved unless $LOADED_FEATURES.include?(resolved)
             return true
           else
@@ -118,7 +119,7 @@ end
         else
           $debug.puts "require_relative #{resolved}"
           $LOADED_FEATURES << resolved
-          RubyRb.require(resolved)
+          RubyRb.require(absolute_filepath: resolved, required_filepath: filepath)
           return true
         end
       end
@@ -137,7 +138,7 @@ end
       def eval(code)
         verbose = $VERBOSE
         $VERBOSE = false
-        iseq = RubyVM::InstructionSequence.compile(code).to_a
+        iseq = RubyVM::InstructionSequence.compile(code, '(eval)').to_a
         $VERBOSE = true
         iseq[9] = :eval
         VM.instance.execute(iseq, _self: self)
@@ -164,9 +165,9 @@ end
 
 if ENV['PATCH_EVAL']
   class BasicObject
-    def instance_eval(code = nil, &block)
+    def instance_eval(code = nil, file = '(eval)', line = nil, &block)
       if code
-        iseq = ::RubyVM::InstructionSequence.compile(code).to_a
+        iseq = ::RubyVM::InstructionSequence.compile(code, file, file, line).to_a
         iseq[9] = :eval
         ::VM.instance.execute(iseq, _self: self)
       else
@@ -176,9 +177,9 @@ if ENV['PATCH_EVAL']
   end
 
   class Module
-    def module_eval(code = nil, &block)
+    def module_eval(code = nil, file = '(eval)', line = nil, &block)
       if code
-        iseq = ::RubyVM::InstructionSequence.compile(code).to_a
+        iseq = ::RubyVM::InstructionSequence.compile(code, file, file, line).to_a
         iseq[9] = :eval
         ::VM.instance.execute(iseq, _self: self)
       else
@@ -186,9 +187,9 @@ if ENV['PATCH_EVAL']
       end
     end
 
-    def class_eval(code = nil, &block)
+    def class_eval(code = nil, file = '(eval)', line = nil, &block)
       if code
-        iseq = ::RubyVM::InstructionSequence.compile(code).to_a
+        iseq = ::RubyVM::InstructionSequence.compile(code, file, file, line).to_a
         iseq[9] = :eval
         ::VM.instance.execute(iseq, _self: self)
       else
@@ -212,5 +213,5 @@ end
 
 cli.run(
   eval: ->(code) { RubyRb.eval(code) },
-  require: ->(file) { RubyRb.require(file) }
+  require: ->(file) { RubyRb.require(absolute_filepath: file, required_filepath: file) }
 )
