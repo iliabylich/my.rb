@@ -33,18 +33,46 @@ class VM
   end
 
   class ReturnError < LongJumpError
-    def can_be_handled_by?(frame)
-      frame.can_return?
+    def do_jump!
+      frame = VM.instance.current_frame
+
+      if frame.can_return?
+        # swallow
+        frame.returning = self.value
+      else
+        VM.instance.pop_frame(reason: "longjmp (return) #{self}")
+        raise self
+      end
     end
   end
   class NextError < LongJumpError
-    def can_be_handled_by?(frame)
-      frame.can_do_next?
+    def do_jump!
+      frame = VM.instance.current_frame
+
+      if frame.can_do_next?
+        # swallow
+        frame.returning = self.value
+      else
+        VM.instance.pop_frame(reason: "longjmp (next) #{self}")
+        raise self
+      end
     end
   end
   class BreakError < LongJumpError
-    def can_be_handled_by?(frame)
-      frame.can_do_break?
+    def do_jump!
+      frame = VM.instance.current_frame
+
+      if frame.can_do_break?
+        if frame.is_lambda
+          frame.returning = self.value
+        else
+          VM.instance.pop_frame(reason: "propagating block return #{self}")
+          raise ReturnError, self.value
+        end
+      else
+        VM.instance.pop_frame(reason: "longjmp (break) #{self}")
+        raise self
+      end
     end
   end
   class PropagateError < InternalError
@@ -73,7 +101,7 @@ class VM
     before = frame_stack.size
 
     begin
-      pushed_frame = push_frame(iseq, **payload)
+      push_frame(iseq, **payload)
     rescue Exception => e
       puts e
       puts "Errors inside push_frame are not allowed"
@@ -89,29 +117,9 @@ class VM
     begin
       current_frame.prepare
       evaluate_last_frame
-    rescue ReturnError, NextError => e
-      if e.can_be_handled_by?(current_frame)
-        # swallow
-        current_frame.returning = e.value
-      else
-        assert_frame(pushed_frame)
-        pop_frame(reason: "longjmp #{e}")
-        raise
-      end
-    rescue BreakError => e
-      if e.can_be_handled_by?(current_frame)
-        if current_frame.is_lambda
-          current_frame.returning = e.value
-        else
-          assert_frame(pushed_frame)
-          pop_frame(reason: "propagating block return #{e}")
-          raise ReturnError, e.value
-        end
-      else
-        assert_frame(pushed_frame)
-        pop_frame(reason: "longjmp #{e}")
-        raise
-      end
+    rescue LongJumpError => e
+      assert_frame(pushed_frame)
+      e.do_jump!
     rescue Exception => e
       assert_frame(pushed_frame)
       pop_frame(reason: "propagating #{e}")
@@ -120,11 +128,7 @@ class VM
 
     __log { "\n\n--------- END   #{current_frame.header} ---------" }
 
-    frame_to_pop = current_frame
-    if !pushed_frame.equal?(frame_to_pop)
-      raise InternalError, 'must pop what was pushed'
-    end
-
+    assert_frame(pushed_frame)
     pop_frame(reason: "fully evaluated, returning")
   end
 

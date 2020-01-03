@@ -14,11 +14,14 @@ namespace :rubyspec do
     each_spec do |f|
       sh "#{env} bin/my.rb ./mspec/bin/mspec-tag #{f} -- --int-spec"
     end
+    sh 'rm -rf ./rubyspec_temp'
   end
 
   task :run_passing do
     each_spec do |f|
       sh "#{env} ./mspec/bin/mspec -t bin/my.rb #{f} -- --excl-tag=fails"
     end
+
+    sh 'rm -rf ./rubyspec_temp'
   end
 end
