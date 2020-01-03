@@ -1,3 +1,2 @@
-fails:Hash literal freezes string keys on initialization
 fails:Hash literal raises a TypeError if any splatted elements keys are not symbols
 fails:Hash literal raises a TypeError if #to_hash does not return a Hash

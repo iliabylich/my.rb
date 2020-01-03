@@ -4,7 +4,6 @@ fails:An instance method raises an error with too many arguments
 fails:An instance method definition with a splat requires the presence of any arguments that precede the *
 fails:An instance method with a default argument evaluates the default when required arguments precede it
 fails:An instance method with a default argument prefers to assign to a default argument before a splat argument
-fails:A singleton method definition can be declared for a global variable
 fails:Redefining a singleton method does not inherit a previously set visibility
 fails:A nested method definition creates an instance method when evaluated in an instance method
 fails:A nested method definition creates a class method when evaluated in a class method

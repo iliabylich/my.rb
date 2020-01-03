@@ -1,2 +1,1 @@
-fails:A singleton class has class String as the superclass of a String instance
 fails:A constant on a singleton class cannot be accessed via object::CONST

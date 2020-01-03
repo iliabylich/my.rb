@@ -68,6 +68,7 @@ class Executor
        (local = vm.frame_stack.closest(&:eval?).locals.find_if_declared(name: mid))
 
       # x = 1; eval("x") - x is a VCALL in eval, so maybe it's a local variable of the parent frame
+      _recv = pop
       result = local.value
       push(result)
       return
@@ -515,7 +516,7 @@ class Executor
   end
 
   def execute_putstring((string))
-    push(string)
+    push(string.dup)
   end
 
   def execute_splatarray((_flag))
@@ -674,7 +675,7 @@ class Executor
   def execute_tostring(*)
     str = pop
     obj = pop
-    if str != obj.to_s
+    if str != obj.__send__(:to_s)
       # TODO: must be some raise here
       # if to_s failed to convert an object
       binding.irb

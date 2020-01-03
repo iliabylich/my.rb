@@ -1,6 +1,0 @@
-fails:Ruby character strings taints the result of interpolation when an interpolated value is tainted
-fails:Ruby character strings untrusts the result of interpolation when an interpolated value is untrusted
-fails:Ruby character strings calls #to_s as a private method
-fails:Ruby String interpolation creates a String having an Encoding compatible with all components
-fails:Ruby String interpolation creates a String having the Encoding of the components when all are the same Encoding
-fails:Ruby String interpolation raises an Encoding::CompatibilityError if the Encodings are not compatible

@@ -1,1 +1,0 @@
-fails:The TOPLEVEL_BINDING constant has no local variables in files required before the main script

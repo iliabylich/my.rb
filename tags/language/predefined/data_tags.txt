@@ -1,2 +1,1 @@
-fails:The DATA constant does not exist when the main script contains no __END__
 fails:The DATA constant is set even if there is no newline after __END__
