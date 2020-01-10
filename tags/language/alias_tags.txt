@@ -1,2 +1,5 @@
 fails:The alias keyword operates on the class/module metaclass when used in instance_eval
 fails:The alias keyword operates on the class/module metaclass when used in instance_exec
+fails:The alias keyword on top level defines the alias on Object
+fails:The alias keyword can create a new global variable, synonym of the original
+fails:The alias keyword can override an existing global variable and make them synonyms

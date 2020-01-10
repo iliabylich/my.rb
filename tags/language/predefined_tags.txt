@@ -22,3 +22,10 @@ fails:Predefined globals $1..N sets the encoding to the encoding of the source S
 fails:Predefined global $! should be set to the new exception after a throwing rescue
 fails:Predefined global $! in bodies without ensure should not be cleared when an exception is not rescued
 fails:Predefined global $! in bodies without ensure should not be cleared when an exception is rescued and rethrown
+fails:Predefined global $! in ensure-protected bodies should not be cleared when an exception is not rescued
+fails:Predefined global $! in ensure-protected bodies should not be cleared when an exception is rescued and rethrown
+fails:Predefined global $_ is set to the last line read by e.g. StringIO#gets
+fails:Predefined global $_ is set at the method-scoped level rather than block-scoped
+fails:Predefined global $_ can be assigned any value
+fails:Global variable $-v is an alias of $VERBOSE
+fails:Global variable $-w is an alias of $VERBOSE

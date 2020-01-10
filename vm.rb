@@ -104,8 +104,7 @@ class VM
       push_frame(iseq, **payload)
     rescue Exception => e
       puts e
-      puts "Errors inside push_frame are not allowed"
-      Kernel.exit(1)
+      raise InternalError, "Errors inside push_frame are not allowed"
     end
 
     pushed_frame = current_frame
@@ -345,16 +344,13 @@ class VM
     yield
   rescue InternalError => e
     raise
-  rescue SystemExit => e
-    raise
   rescue Exception => e
     handle_error(e)
   end
 
   def handle_error(error)
     if current_frame.enabled_ensure_handlers.length > 1
-      puts "current_frame.enabled_ensure_handlers > 1"
-      Kernel.exit(0)
+      raise InternalError, "current_frame.enabled_ensure_handlers > 1"
     end
 
     if (rescue_handler = current_frame.enabled_rescue_handlers[0])

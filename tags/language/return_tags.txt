@@ -4,3 +4,4 @@ fails:The return keyword within a block returns from the lexically enclosing met
 fails:The return keyword within a block returns from the lexically enclosing method even in case of chained calls(in yield)
 fails:The return keyword within a block causes the method to return even when the immediate parent has already returned
 fails:The return keyword at top level within a begin swallows exception if returns in ensure block
+fails:The return keyword in a Thread raises a LocalJumpError if used to exit a thread
