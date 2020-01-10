@@ -119,6 +119,10 @@ class Executor
           raise VM::InternalError, 'unsupported'
         end
 
+        unless recv.is_a?(Class)
+          recv = recv.singleton_class
+        end
+
         recv.alias_method(new_method_name, existing_method_name)
 
         nil

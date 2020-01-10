@@ -29,7 +29,6 @@ end
 require 'irb'
 require 'irb/completion'
 require 'readline'
-require '/Users/ilya/.rvm/scripts/irbrc.rb'
 
 Object.send(:remove_const, :UncaughtThrowError)
 class UncaughtThrowError < ArgumentError
