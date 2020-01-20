@@ -129,8 +129,6 @@ end
       diff = $LOADED_FEATURES - before
       $debug.puts "Success, diff is #{diff.inspect}"
       result
-    rescue LoadError
-      binding.irb
     end
 
     if ENV['PATCH_EVAL']

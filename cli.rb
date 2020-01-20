@@ -10,7 +10,6 @@ class CLI
       debug: false,
       debug_focus_on: nil,
       debug_print_stack: false,
-      debug_print_rest_on_error: false
     }
 
     OptionParser.new do |opts|
@@ -51,10 +50,6 @@ class CLI
 
       opts.on('--debug-print-stack') do
         options[:debug_print_stack] = true
-      end
-
-      opts.on('--debug-print-rest-on-error') do
-        options[:debug_print_rest_on_error] = true
       end
     end.parse!
 
@@ -99,7 +94,6 @@ class CLI
     VM.instance.debug = options[:debug]
     VM.instance.debug_focus_on = options[:debug_focus_on]
     VM.instance.debug_print_stack = options[:debug_print_stack]
-    VM.instance.debug_print_rest_on_error = options[:debug_print_rest_on_error]
 
     options[:load_path].each { |path| $LOAD_PATH << path }
     if (pre = options[:pre])

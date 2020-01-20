@@ -5,7 +5,6 @@ class Executor
 
   def push(object); stack.push(object)  end
   def pop;          stack.pop;          end
-  def reset_stack;  stack = [];         end
 
   def current_frame;   vm.current_frame;   end
   def current_self;    vm.current_self;    end
@@ -35,18 +34,6 @@ class Executor
     push(recv + arg)
   end
 
-  #define VM_CALL_ARGS_SPLAT      (0x01 << VM_CALL_ARGS_SPLAT_bit)
-  #define VM_CALL_ARGS_BLOCKARG   (0x01 << VM_CALL_ARGS_BLOCKARG_bit)
-  #define VM_CALL_FCALL           (0x01 << VM_CALL_FCALL_bit)
-  #define VM_CALL_VCALL           (0x01 << VM_CALL_VCALL_bit)
-  #define VM_CALL_ARGS_SIMPLE     (0x01 << VM_CALL_ARGS_SIMPLE_bit)
-  #define VM_CALL_BLOCKISEQ       (0x01 << VM_CALL_BLOCKISEQ_bit)
-  #define VM_CALL_KWARG           (0x01 << VM_CALL_KWARG_bit)
-  #define VM_CALL_KW_SPLAT        (0x01 << VM_CALL_KW_SPLAT_bit)
-  #define VM_CALL_TAILCALL        (0x01 << VM_CALL_TAILCALL_bit)
-  #define VM_CALL_SUPER           (0x01 << VM_CALL_SUPER_bit)
-  #define VM_CALL_ZSUPER          (0x01 << VM_CALL_ZSUPER_bit)
-  #define VM_CALL_OPT_SEND        (0x01 << VM_CALL_OPT_SEND_bit)
   VM_CALL_ARGS_SPLAT      = (0x01 << 0)
   VM_CALL_ARGS_BLOCKARG   = (0x01 << 1)
   VM_CALL_FCALL           = (0x01 << 2)
@@ -261,7 +248,7 @@ class Executor
 
     returned =
       if name == :singletonclass
-        # !? class << self
+        # class << self
         of = pop
         VM.instance.execute(iseq, name: name, of: of)
       else
@@ -468,38 +455,38 @@ class Executor
   }.curry
 
   RB_OBJ_TYPES = {
-    0x00 => ->(obj) { binding.irb }, # RUBY_T_NONE
+    0x00 => ->(obj) { raise NotImplementedError, "Unknown check_type RUBY_T_NONE" },     # RUBY_T_NONE
 
-    0x01 => CHECK_TYPE[Object], # RUBY_T_OBJECT
-    0x02 => ->(obj) { binding.irb }, # RUBY_T_CLASS
-    0x03 => ->(obj) { binding.irb }, # RUBY_T_MODULE
-    0x04 => ->(obj) { binding.irb }, # RUBY_T_FLOAT
-    0x05 => CHECK_TYPE[String], # RUBY_T_STRING
-    0x06 => ->(obj) { binding.irb }, # RUBY_T_REGEXP
-    0x07 => ->(obj) { binding.irb }, # RUBY_T_ARRAY
-    0x08 => ->(obj) { binding.irb }, # RUBY_T_HASH
-    0x09 => ->(obj) { binding.irb }, # RUBY_T_STRUCT
-    0x0a => ->(obj) { binding.irb }, # RUBY_T_BIGNUM
-    0x0b => ->(obj) { binding.irb }, # RUBY_T_FILE
-    0x0c => ->(obj) { binding.irb }, # RUBY_T_DATA
-    0x0d => ->(obj) { binding.irb }, # RUBY_T_MATCH
-    0x0e => ->(obj) { binding.irb }, # RUBY_T_COMPLEX
-    0x0f => ->(obj) { binding.irb }, # RUBY_T_RATIONAL
+    0x01 => CHECK_TYPE[Object],                                                          # RUBY_T_OBJECT
+    0x02 => ->(obj) { raise NotImplementedError, "Unknown check_type RUBY_T_CLASS" },    # RUBY_T_CLASS
+    0x03 => ->(obj) { raise NotImplementedError, "Unknown check_type RUBY_T_MODULE" },   # RUBY_T_MODULE
+    0x04 => ->(obj) { raise NotImplementedError, "Unknown check_type RUBY_T_FLOAT" },    # RUBY_T_FLOAT
+    0x05 => CHECK_TYPE[String],                                                          # RUBY_T_STRING
+    0x06 => ->(obj) { raise NotImplementedError, "Unknown check_type RUBY_T_REGEXP" },   # RUBY_T_REGEXP
+    0x07 => ->(obj) { raise NotImplementedError, "Unknown check_type RUBY_T_ARRAY" },    # RUBY_T_ARRAY
+    0x08 => ->(obj) { raise NotImplementedError, "Unknown check_type RUBY_T_HASH" },     # RUBY_T_HASH
+    0x09 => ->(obj) { raise NotImplementedError, "Unknown check_type RUBY_T_STRUCT" },   # RUBY_T_STRUCT
+    0x0a => ->(obj) { raise NotImplementedError, "Unknown check_type RUBY_T_BIGNUM" },   # RUBY_T_BIGNUM
+    0x0b => ->(obj) { raise NotImplementedError, "Unknown check_type RUBY_T_FILE" },     # RUBY_T_FILE
+    0x0c => ->(obj) { raise NotImplementedError, "Unknown check_type RUBY_T_DATA" },     # RUBY_T_DATA
+    0x0d => ->(obj) { raise NotImplementedError, "Unknown check_type RUBY_T_MATCH" },    # RUBY_T_MATCH
+    0x0e => ->(obj) { raise NotImplementedError, "Unknown check_type RUBY_T_COMPLEX" },  # RUBY_T_COMPLEX
+    0x0f => ->(obj) { raise NotImplementedError, "Unknown check_type RUBY_T_RATIONAL" }, # RUBY_T_RATIONAL
 
-    0x11 => ->(obj) { binding.irb }, # RUBY_T_NIL
-    0x12 => ->(obj) { binding.irb }, # RUBY_T_TRUE
-    0x13 => ->(obj) { binding.irb }, # RUBY_T_FALSE
-    0x14 => ->(obj) { binding.irb }, # RUBY_T_SYMBOL
-    0x15 => ->(obj) { binding.irb }, # RUBY_T_FIXNUM
-    0x16 => ->(obj) { binding.irb }, # RUBY_T_UNDEF
+    0x11 => ->(obj) { raise NotImplementedError, "Unknown check_type RUBY_T_NIL" },      # RUBY_T_NIL
+    0x12 => ->(obj) { raise NotImplementedError, "Unknown check_type RUBY_T_TRUE" },     # RUBY_T_TRUE
+    0x13 => ->(obj) { raise NotImplementedError, "Unknown check_type RUBY_T_FALSE" },    # RUBY_T_FALSE
+    0x14 => ->(obj) { raise NotImplementedError, "Unknown check_type RUBY_T_SYMBOL" },   # RUBY_T_SYMBOL
+    0x15 => ->(obj) { raise NotImplementedError, "Unknown check_type RUBY_T_FIXNUM" },   # RUBY_T_FIXNUM
+    0x16 => ->(obj) { raise NotImplementedError, "Unknown check_type RUBY_T_UNDEF" },    # RUBY_T_UNDEF
 
-    0x1a => ->(obj) { binding.irb }, # RUBY_T_IMEMO
-    0x1b => ->(obj) { binding.irb }, # RUBY_T_NODE
-    0x1c => ->(obj) { binding.irb }, # RUBY_T_ICLASS
-    0x1d => ->(obj) { binding.irb }, # RUBY_T_ZOMBIE
-    0x1e => ->(obj) { binding.irb }, # RUBY_T_MOVED
+    0x1a => ->(obj) { raise NotImplementedError, "Unknown check_type RUBY_T_IMEMO" },    # RUBY_T_IMEMO
+    0x1b => ->(obj) { raise NotImplementedError, "Unknown check_type RUBY_T_NODE" },     # RUBY_T_NODE
+    0x1c => ->(obj) { raise NotImplementedError, "Unknown check_type RUBY_T_ICLASS" },   # RUBY_T_ICLASS
+    0x1d => ->(obj) { raise NotImplementedError, "Unknown check_type RUBY_T_ZOMBIE" },   # RUBY_T_ZOMBIE
+    0x1e => ->(obj) { raise NotImplementedError, "Unknown check_type RUBY_T_MOVED" },    # RUBY_T_MOVED
 
-    0x1f => ->(obj) { binding.irb }, # RUBY_T_MASK
+    0x1f => ->(obj) { raise NotImplementedError, "Unknown check_type RUBY_T_MASK" },     # RUBY_T_MASK
   }.freeze
 
   def execute_checktype((type))
@@ -575,7 +562,7 @@ class Executor
     push(hash)
   end
 
-  def execute_swap(args)
+  def execute_swap(*)
     first = pop
     last = pop
     push(first)
@@ -612,7 +599,7 @@ class Executor
     push(recv.__send__(:==, *args))
   end
 
-  def execute_opt_ltlt((options, _flag))
+  def execute_opt_ltlt((_options, _flag))
     item = pop
     list = pop
     push(list << item)
@@ -682,7 +669,7 @@ class Executor
     if str != obj.__send__(:to_s)
       # TODO: must be some raise here
       # if to_s failed to convert an object
-      binding.irb
+      raise NotImplementedError, "given object is not a string, don't know how to handle"
     end
     push(str)
   end
@@ -739,7 +726,7 @@ class Executor
     DEFINED_FUNC = 17
   end
 
-  def execute_defined((defined_type, obj, needstr))
+  def execute_defined((defined_type, obj, _needstr))
     context = pop # unused in some branches
 
     verdict =
@@ -827,7 +814,7 @@ class Executor
     (current_frame.svars ||= {})[:backref] = Regexp.last_match
   end
 
-  def execute_opt_aref_with((key, options, _flag))
+  def execute_opt_aref_with((key, _options, _flag))
     recv = pop
     push(recv[key])
   end
@@ -841,8 +828,7 @@ class Executor
   def execute_setglobal((name))
     # there's no way to set a gvar by name/value
     # but eval can reference locals
-    value = pop
-    RubyRb::REAL_EVAL.bind(self).call("#{name} = value")
+    RubyRb::REAL_EVAL.bind(self).call("#{name} = pop")
   end
 
   def execute_opt_and(_)
@@ -969,7 +955,7 @@ class Executor
     push(result)
   end
 
-  def execute_opt_aset_with((key, options, flag))
+  def execute_opt_aset_with((key, _options, _flag))
     value = pop
     recv = pop
     push(recv[key] = value)
@@ -999,13 +985,12 @@ class Executor
     if throw_obj.is_a?(Exception)
       raise throw_obj
     else
-      binding.irb
+      raise NotImplementedError, "throw_obj is not an Exception (#{throw_obj.class} given), don't know what to do"
     end
   end
 
   def execute_throw((throw_state))
     state = throw_state & VM_THROW_STATE_MASK
-    flag  = throw_state & VM_THROW_NO_ESCAPE_FLAG
     throw_obj = pop
 
     if state != 0
@@ -1018,7 +1003,7 @@ class Executor
       when RUBY_TAG_NEXT
         raise VM::NextError, throw_obj
       else
-        binding.irb
+        raise NotImplementedError, "Unknown throw kind #{state}"
       end
     else
       # throw continue
@@ -1067,8 +1052,6 @@ class Executor
   end
 
   def execute_getspecial((key, type))
-    non_block_frame = vm.frame_stack.closest { |f| !f.is_a?(BlockFrame) }
-
     result =
       if type == 0
         __lep_svar_get(key)

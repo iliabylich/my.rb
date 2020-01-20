@@ -22,7 +22,7 @@ class Locals
 
     initial_names.reverse_each.with_index(3) do |arg_name, idx|
       # unused args (like virtual attribute that holds mlhs value)
-      # have have numeric names
+      # have numeric names
       arg_name += 1 if arg_name.is_a?(Integer)
       declare(name: arg_name, id: idx).set(Locals::UNDEFINED)
     end
@@ -61,7 +61,7 @@ class Locals
   def pretty
     @set
       .map { |local| ["#{local.name}(#{local.id})", local.value] }
-      .sort_by { |(name, value)| name }
+      .sort_by { |(name, _value)| name }
       .to_h
   end
 end

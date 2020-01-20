@@ -1,92 +1,20 @@
 require_relative './executor'
 require_relative './vm/frames'
 require_relative './vm/iseq'
+require_relative './vm/errors'
 
 class VM
   attr_reader :frame_stack
   attr_accessor :debug
   attr_accessor :debug_focus_on
   attr_accessor :debug_print_stack
-  attr_accessor :debug_print_rest_on_error
-
-  class InternalError < ::Exception
-    def initialize(*)
-      super
-      set_backtrace(VM.instance.backtrace)
-    end
-  end
-
-  class LongJumpError  < InternalError
-    attr_reader :value
-
-    def initialize(value)
-      @value = value
-    end
-
-    def can_be_handled_by?(frame)
-      raise InternalError, 'Not implemented'
-    end
-
-    def message
-      "#{self.class}(#{@value.inspect})"
-    end
-  end
-
-  class ReturnError < LongJumpError
-    def do_jump!
-      frame = VM.instance.current_frame
-
-      if frame.can_return?
-        # swallow
-        frame.returning = self.value
-      else
-        VM.instance.pop_frame(reason: "longjmp (return) #{self}")
-        raise self
-      end
-    end
-  end
-  class NextError < LongJumpError
-    def do_jump!
-      frame = VM.instance.current_frame
-
-      if frame.can_do_next?
-        # swallow
-        frame.returning = self.value
-      else
-        VM.instance.pop_frame(reason: "longjmp (next) #{self}")
-        raise self
-      end
-    end
-  end
-  class BreakError < LongJumpError
-    def do_jump!
-      frame = VM.instance.current_frame
-
-      if frame.can_do_break?
-        if frame.is_lambda
-          frame.returning = self.value
-        else
-          VM.instance.pop_frame(reason: "propagating block return #{self}")
-          raise ReturnError, self.value
-        end
-      else
-        VM.instance.pop_frame(reason: "longjmp (break) #{self}")
-        raise self
-      end
-    end
-  end
-  class PropagateError < InternalError
-    attr_reader :err
-    def initialize(err)
-      @err = err
-    end
-  end
 
   def initialize
     @frame_stack = FrameStack.new
     @executor = Executor.new
 
     @jump = nil
+    @previous_frame = nil
   end
 
   def self.instance
@@ -95,10 +23,6 @@ class VM
 
   def execute(iseq, **payload)
     iseq = ISeq.new(iseq)
-
-    depth_before = frame_stack.size
-
-    before = frame_stack.size
 
     begin
       push_frame(iseq, **payload)
@@ -177,7 +101,7 @@ class VM
           of: payload[:of]
         )
       else
-        binding.irb
+        raise NotImplementedError, "Unknown iseq name #{iseq.name}"
       end
 
     when :method
@@ -208,10 +132,9 @@ class VM
         parent_frame: current_frame
       )
     else
-      binding.irb
+      raise NotImplementedError, "Unknown iseq kind #{iseq.kind}"
     end
     __log { "Pushing frame #{current_frame.header}" }
-
   end
 
   def pop_frame(reason: 'unknown')
@@ -326,7 +249,7 @@ class VM
       on_label(insn)
       # ignore
     else
-      binding.irb
+      raise NotImplementedError, "Unknown insn kind #{insn.inspect}"
     end
   end
 
@@ -357,12 +280,7 @@ class VM
       result = execute(rescue_handler.iseq, caught: error, exit_to: rescue_handler.exit_label)
       current_stack.push(result)
     else
-      # p "unwrapping stack (pop #{current_frame.header})"
       raise
-
-    #   if (ensure_iseq = current_frame.iseq.handler(:ensure))
-    #     execute(ensure_iseq)
-    #   end
     end
   end
 

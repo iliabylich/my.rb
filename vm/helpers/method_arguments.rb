@@ -141,8 +141,8 @@ class MethodArguments
     end
 
     __kw_initializers.each do |kind, name, value|
-        locals.find(name: name).set(value)
-        VM.instance.__log { "#{kind}: #{name} = #{value.inspect}" }
+      locals.find(name: name).set(value)
+      VM.instance.__log { "#{kind}: #{name} = #{value.inspect}" }
     end
 
     if arity_check && values.any?
