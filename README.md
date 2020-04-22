@@ -1,5 +1,7 @@
 ## Ruby executor
 
+Blog post: https://ilyabylich.svbtle.com/evaluating-ruby-in-ruby
+
 Requirements:
 
 + ruby 2.6.4
